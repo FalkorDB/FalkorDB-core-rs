@@ -166,6 +166,7 @@ unsafe extern "C" fn UndoLog_Rollback(
     g: *mut Graph,
 ) {
     (log as *mut _UndoLog).as_mut().unwrap().rollback(gc, g);
+    drop(Box::from_raw(log as *mut _UndoLog));
 }
 
 #[no_mangle]
