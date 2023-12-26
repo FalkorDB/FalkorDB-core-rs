@@ -5,9 +5,8 @@
 
 use std::alloc::{GlobalAlloc, Layout};
 use std::os::raw::c_void;
-/// cbindgen:ignore
+
 mod undo_log;
-mod undo_log_ffi;
 
 extern "C" {
     static RedisModule_Alloc: Option<extern "C" fn(usize) -> *mut c_void>;

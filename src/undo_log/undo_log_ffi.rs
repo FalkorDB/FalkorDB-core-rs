@@ -5,7 +5,7 @@
 
 use std::{ffi::{c_void, c_char}, slice::from_raw_parts};
 
-use crate::undo_log::*;
+use super::undo_log::*;
 
 type UndoLog = *mut c_void;
 
