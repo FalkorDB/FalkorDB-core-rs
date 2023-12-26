@@ -3,7 +3,7 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
- use std::{
+use std::{
     ffi::{c_char, c_void},
     ptr::null_mut,
 };
@@ -72,9 +72,38 @@ enum UndoOp {
     CreateIndex(SchemaType, *const c_char, *const c_char, IndexFieldType),
 }
 
-/// cbindgen:ignore
 pub struct _UndoLog {
     ops: Vec<UndoOp>,
+}
+
+impl Drop for _UndoLog {
+    fn drop(&mut self) {
+        for op in self.ops.iter_mut() {
+            match op {
+                UndoOp::UpdateNodes(vec) => {
+                    for (_, set) in vec {
+                        unsafe { AttributeSet_Free(set) };
+                    }
+                }
+                UndoOp::UpdateEdges(vec) => {
+                    for (_, set) in vec {
+                        unsafe { AttributeSet_Free(set) };
+                    }
+                }
+                UndoOp::DeleteNodes(vec) => {
+                    for (_, set, _) in vec {
+                        unsafe { AttributeSet_Free(set) };
+                    }
+                }
+                UndoOp::DeleteEdges(vec) => {
+                    for (_, _, _, _, set) in vec {
+                        unsafe { AttributeSet_Free(set) };
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
 }
 
 impl _UndoLog {
