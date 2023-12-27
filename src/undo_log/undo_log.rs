@@ -302,7 +302,7 @@ impl _UndoLog {
             match op {
                 UndoOp::CreateNodes(mut nodes) => {
                     for node in nodes.iter_mut().rev() {
-                        GraphContext_DeleteNodeFromIndices(gc, node);
+                        GraphContext_DeleteNodeFromIndices(gc, node, null_mut(), 0);
                     }
                     Graph_DeleteNodes(g, nodes.as_mut_ptr(), nodes.len() as u64);
                 }
@@ -360,7 +360,7 @@ impl _UndoLog {
                             labels.as_mut_ptr(),
                             labels.len() as u32,
                         );
-                        GraphContext_DeleteNodeFromIndicesByLabels(
+                        GraphContext_DeleteNodeFromIndices(
                             gc,
                             node,
                             labels.as_mut_ptr(),
@@ -462,10 +462,6 @@ extern "C" {
         e: *mut Edge,
     );
     fn GraphContext_DeleteNodeFromIndices(
-        gc: *mut GraphContext,
-        n: *mut Node,
-    );
-    fn GraphContext_DeleteNodeFromIndicesByLabels(
         gc: *mut GraphContext,
         n: *mut Node,
         lbls: *mut LabelID,
