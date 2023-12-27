@@ -3,8 +3,8 @@ extern crate cbindgen;
 use std::env;
 
 fn main() {
-    let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let bin_dir = env::var("FalkorDBRS_BINDIR").unwrap_or(".".to_string());
+    let crate_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let bin_dir = env::var("FalkorDBRS_BINDIR").unwrap_or("target/".to_string());
 
     cbindgen::Builder::new()
       .with_crate(crate_dir)
