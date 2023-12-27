@@ -168,9 +168,8 @@ unsafe extern "C" fn UndoLog_CreateIndex(
 unsafe extern "C" fn UndoLog_Rollback(
     log: UndoLog,
     gc: *mut GraphContext,
-    g: *mut Graph,
 ) {
-    (log as *mut _UndoLog).as_mut().unwrap().rollback(gc, g);
+    (log as *mut _UndoLog).as_mut().unwrap().rollback(gc);
     drop(Box::from_raw(log as *mut _UndoLog));
 }
 

@@ -244,8 +244,8 @@ impl _UndoLog {
     pub unsafe fn rollback(
         &mut self,
         gc: *mut GraphContext,
-        g: *mut Graph,
     ) {
+        let g = GraphContext_GetGraph(gc as *const _);
         while let Some(op) = self.ops.pop() {
             match op {
                 UndoOp::CreateNodes(mut nodes) => {

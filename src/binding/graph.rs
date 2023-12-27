@@ -6,11 +6,15 @@ pub type LabelID = i32;
 pub type SchemaID = i32;
 pub type RelationID = i32;
 pub type AttributeID = i32;
-pub type GraphContext = c_void;
 pub type AttributeSet = *mut c_void;
 
 #[repr(C)]
 pub struct Graph {
+    // TODO
+}
+
+#[repr(C)]
+pub struct GraphContext {
     // TODO
 }
 
@@ -94,6 +98,7 @@ extern "C" {
         g: *mut Graph,
         relation_id: RelationID,
     );
+    pub fn GraphContext_GetGraph(g: *const Graph) -> *mut Graph;
     pub fn GraphContext_RemoveSchema(
         gc: *mut GraphContext,
         schema_id: i32,
