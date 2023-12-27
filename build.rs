@@ -7,10 +7,10 @@ fn main() {
     let bin_dir = env::var("FalkorDBRS_BINDIR").unwrap_or("target/".to_string());
 
     cbindgen::Builder::new()
-      .with_crate(crate_dir)
-      .with_language(cbindgen::Language::C)
-      .with_pragma_once(true)
-      .generate()
-      .expect("Unable to generate bindings")
-      .write_to_file(format!("{bin_dir}/FalkorDBRS.h"));
+        .with_crate(crate_dir)
+        .with_language(cbindgen::Language::C)
+        .with_pragma_once(true)
+        .generate()
+        .expect("Unable to generate bindings")
+        .write_to_file(format!("{bin_dir}/FalkorDBRS.h"));
 }
