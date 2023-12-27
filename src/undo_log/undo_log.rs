@@ -264,9 +264,10 @@ impl _UndoLog {
                     for (node_id, set, labels) in vec.iter_mut().rev() {
                         let mut node = Node {
                             attributes: null_mut(),
-                            id: *node_id,
+                            id: -1,
                         };
                         Graph_CreateNode(g, &mut node, labels.as_mut_ptr(), labels.len() as u32);
+                        assert!(*node_id >= node.id);
                         node.attributes.write(*set);
                         GraphContext_AddNodeToIndices(gc, &mut node);
                     }
@@ -275,13 +276,14 @@ impl _UndoLog {
                     for (edge_id, src_id, dest_id, relation_id, set) in vec.iter_mut().rev() {
                         let mut edge = Edge {
                             attributes: null_mut(),
-                            id: *edge_id,
+                            id: -1,
                             relationship: null_mut(),
                             relation_id: *relation_id,
                             src_id: *src_id,
                             dest_id: *dest_id,
                         };
                         Graph_CreateEdge(g, edge.src_id, edge.dest_id, edge.relation_id, &mut edge);
+                        assert!(*edge_id >= edge.id);
                         edge.attributes.write(*set);
                         GraphContext_AddEdgeToIndices(gc, &mut edge);
                     }
