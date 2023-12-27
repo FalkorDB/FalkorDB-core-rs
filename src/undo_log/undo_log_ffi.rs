@@ -3,7 +3,12 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
-use std::{ffi::{c_void, c_char}, slice::from_raw_parts};
+use std::{
+    ffi::{c_char, c_void},
+    slice::from_raw_parts,
+};
+
+use crate::binding::graph::*;
 
 use super::undo_log::*;
 
