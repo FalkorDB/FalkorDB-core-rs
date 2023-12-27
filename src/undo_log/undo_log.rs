@@ -304,15 +304,15 @@ impl _UndoLog {
                 }
                 UndoOp::AddLabels(mut vec) => {
                     for (node, labels) in vec.iter_mut().rev() {
-                        Graph_RemoveNodeLabels(
-                            g,
-                            node.id,
-                            labels.as_mut_ptr(),
-                            labels.len() as u32,
-                        );
                         GraphContext_DeleteNodeFromIndices(
                             gc,
                             node,
+                            labels.as_mut_ptr(),
+                            labels.len() as u32,
+                        );
+                        Graph_RemoveNodeLabels(
+                            g,
+                            node.id,
                             labels.as_mut_ptr(),
                             labels.len() as u32,
                         );
