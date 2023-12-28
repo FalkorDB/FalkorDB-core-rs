@@ -55,83 +55,242 @@ pub struct Edge {
 }
 
 extern "C" {
-    pub fn Graph_CreateNode(
+    fn Graph_CreateNode(
         g: *mut Graph,
         n: *mut Node,
         labels: *mut LabelID,
         label_count: u32,
     );
-    pub fn Graph_CreateEdge(
+    fn Graph_CreateEdge(
         g: *mut Graph,
         src: NodeID,
         dest: NodeID,
         r: RelationID,
         e: *mut Edge,
     );
-    pub fn Graph_DeleteNodes(
+    fn Graph_DeleteNodes(
         g: *mut Graph,
         nodes: *mut Node,
         count: u64,
     );
-    pub fn Graph_DeleteEdges(
+    fn Graph_DeleteEdges(
         g: *mut Graph,
         edges: *mut Edge,
         count: u64,
     );
-    pub fn Graph_LabelNode(
+    fn Graph_LabelNode(
         g: *mut Graph,
         id: NodeID,
         lbls: *mut LabelID,
         lbl_count: u32,
     );
-    pub fn Graph_RemoveNodeLabels(
+    fn Graph_RemoveNodeLabels(
         g: *mut Graph,
         id: NodeID,
         lbls: *mut LabelID,
         lbl_count: u32,
     );
-    pub fn Graph_RemoveLabel(
+    fn Graph_RemoveLabel(
         g: *mut Graph,
         label_id: LabelID,
     );
-    pub fn Graph_RemoveRelation(
+    fn Graph_RemoveRelation(
         g: *mut Graph,
         relation_id: RelationID,
     );
-    pub fn GraphContext_GetGraph(g: *const Graph) -> *mut Graph;
-    pub fn GraphContext_RemoveSchema(
+    fn GraphContext_GetGraph(gc: *mut GraphContext) -> *mut Graph;
+    fn GraphContext_RemoveSchema(
         gc: *mut GraphContext,
         schema_id: i32,
         t: SchemaType,
     );
-    pub fn GraphContext_RemoveAttribute(
+    fn GraphContext_RemoveAttribute(
         gc: *mut GraphContext,
         id: AttributeID,
     );
-    pub fn GraphContext_DeleteIndex(
+    fn GraphContext_DeleteIndex(
         gc: *mut GraphContext,
         schema_type: SchemaType,
         label: *const c_char,
         field: *const c_char,
         t: IndexFieldType,
     ) -> i32;
-    pub fn GraphContext_AddNodeToIndices(
+    fn GraphContext_AddNodeToIndices(
         gc: *mut GraphContext,
         n: *mut Node,
     );
-    pub fn GraphContext_AddEdgeToIndices(
+    fn GraphContext_AddEdgeToIndices(
         gc: *mut GraphContext,
         e: *mut Edge,
     );
-    pub fn GraphContext_DeleteNodeFromIndices(
+    fn GraphContext_DeleteNodeFromIndices(
         gc: *mut GraphContext,
         n: *mut Node,
         lbls: *mut LabelID,
         lbl_count: u32,
     );
-    pub fn GraphContext_DeleteEdgeFromIndices(
+    fn GraphContext_DeleteEdgeFromIndices(
         gc: *mut GraphContext,
         e: *mut Edge,
     );
     pub fn AttributeSet_Free(set: *mut AttributeSet);
+}
+
+pub struct GraphAPI {
+    pub graph: *mut Graph,
+}
+
+impl GraphAPI {
+    pub fn create_node(
+        &mut self,
+        n: *mut Node,
+        labels: *mut LabelID,
+        label_count: u32,
+    ) {
+        unsafe {
+            Graph_CreateNode(self.graph, n, labels, label_count);
+        }
+    }
+    pub fn create_edge(
+        &mut self,
+        src: NodeID,
+        dest: NodeID,
+        r: RelationID,
+        e: *mut Edge,
+    ) {
+        unsafe {
+            Graph_CreateEdge(self.graph, src, dest, r, e);
+        }
+    }
+    pub fn delete_nodes(
+        &mut self,
+        nodes: *mut Node,
+        count: u64,
+    ) {
+        unsafe {
+            Graph_DeleteNodes(self.graph, nodes, count);
+        }
+    }
+    pub fn delete_edges(
+        &mut self,
+        edges: *mut Edge,
+        count: u64,
+    ) {
+        unsafe {
+            Graph_DeleteEdges(self.graph, edges, count);
+        }
+    }
+    pub fn label_node(
+        &mut self,
+        id: NodeID,
+        lbls: *mut LabelID,
+        lbl_count: u32,
+    ) {
+        unsafe {
+            Graph_LabelNode(self.graph, id, lbls, lbl_count);
+        }
+    }
+    pub fn remove_node_labels(
+        &mut self,
+        id: NodeID,
+        lbls: *mut LabelID,
+        lbl_count: u32,
+    ) {
+        unsafe {
+            Graph_RemoveNodeLabels(self.graph, id, lbls, lbl_count);
+        }
+    }
+    pub fn remove_label(
+        &mut self,
+        label_id: LabelID,
+    ) {
+        unsafe {
+            Graph_RemoveLabel(self.graph, label_id);
+        }
+    }
+    pub fn remove_relation(
+        &mut self,
+        relation_id: RelationID,
+    ) {
+        unsafe {
+            Graph_RemoveRelation(self.graph, relation_id);
+        }
+    }
+}
+
+pub struct GraphContextAPI {
+    pub context: *mut GraphContext,
+}
+
+impl GraphContextAPI {
+    pub fn get_graph(&self) -> GraphAPI {
+        unsafe {
+            GraphAPI {
+                graph: GraphContext_GetGraph(self.context),
+            }
+        }
+    }
+
+    pub fn remove_schema(
+        &self,
+        schema_id: i32,
+        t: SchemaType,
+    ) {
+        unsafe {
+            GraphContext_RemoveSchema(self.context, schema_id, t);
+        }
+    }
+    pub fn remove_attribute(
+        &self,
+        id: AttributeID,
+    ) {
+        unsafe {
+            GraphContext_RemoveAttribute(self.context, id);
+        }
+    }
+    pub fn delete_index(
+        &self,
+        schema_type: SchemaType,
+        label: *const c_char,
+        field: *const c_char,
+        t: IndexFieldType,
+    ) -> i32 {
+        unsafe { GraphContext_DeleteIndex(self.context, schema_type, label, field, t) }
+    }
+
+    pub fn add_node_to_indices(
+        &self,
+        n: *mut Node,
+    ) {
+        unsafe {
+            GraphContext_AddNodeToIndices(self.context, n);
+        }
+    }
+    pub fn add_edge_to_indices(
+        &self,
+        e: *mut Edge,
+    ) {
+        unsafe {
+            GraphContext_AddEdgeToIndices(self.context, e);
+        }
+    }
+    pub fn delete_node_from_indices(
+        &self,
+        n: *mut Node,
+        lbls: *mut LabelID,
+        lbl_count: u32,
+    ) {
+        unsafe {
+            GraphContext_DeleteNodeFromIndices(self.context, n, lbls, lbl_count);
+        }
+    }
+    pub fn delete_edge_from_indices(
+        &self,
+        e: *mut Edge,
+    ) {
+        unsafe {
+            GraphContext_DeleteEdgeFromIndices(self.context, e);
+        }
+    }
+    // pub fn AttributeSet_Free(set: *mut AttributeSet);
 }

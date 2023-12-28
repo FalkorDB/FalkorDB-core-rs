@@ -243,22 +243,22 @@ impl _UndoLog {
 
     pub unsafe fn rollback(
         &mut self,
-        gc: *mut GraphContext,
+        gc: &mut GraphContextAPI,
     ) {
-        let g = GraphContext_GetGraph(gc as *const _);
+        let mut g = gc.get_graph();
         while let Some(op) = self.ops.pop() {
             match op {
                 UndoOp::CreateNodes(mut nodes) => {
                     for node in nodes.iter_mut().rev() {
-                        GraphContext_DeleteNodeFromIndices(gc, node, null_mut(), 0);
+                        gc.delete_node_from_indices(node, null_mut(), 0);
                     }
-                    Graph_DeleteNodes(g, nodes.as_mut_ptr(), nodes.len() as u64);
+                    g.delete_nodes(nodes.as_mut_ptr(), nodes.len() as u64);
                 }
                 UndoOp::CreateEdges(mut edges) => {
                     for edge in edges.iter_mut().rev() {
-                        GraphContext_DeleteEdgeFromIndices(gc, edge);
+                        gc.delete_edge_from_indices(edge);
                     }
-                    Graph_DeleteEdges(g, edges.as_mut_ptr(), edges.len() as u64);
+                    g.delete_edges(edges.as_mut_ptr(), edges.len() as u64);
                 }
                 UndoOp::DeleteNodes(mut vec) => {
                     for (node_id, set, labels) in vec.iter_mut().rev() {
@@ -266,10 +266,10 @@ impl _UndoLog {
                             attributes: null_mut(),
                             id: -1,
                         };
-                        Graph_CreateNode(g, &mut node, labels.as_mut_ptr(), labels.len() as u32);
+                        g.create_node(&mut node, labels.as_mut_ptr(), labels.len() as u32);
                         assert!(*node_id >= node.id);
                         node.attributes.write(*set);
-                        GraphContext_AddNodeToIndices(gc, &mut node);
+                        gc.add_node_to_indices(&mut node);
                     }
                 }
                 UndoOp::DeleteEdges(mut vec) => {
@@ -282,61 +282,51 @@ impl _UndoLog {
                             src_id: *src_id,
                             dest_id: *dest_id,
                         };
-                        Graph_CreateEdge(g, edge.src_id, edge.dest_id, edge.relation_id, &mut edge);
+                        g.create_edge(edge.src_id, edge.dest_id, edge.relation_id, &mut edge);
                         assert!(*edge_id >= edge.id);
                         edge.attributes.write(*set);
-                        GraphContext_AddEdgeToIndices(gc, &mut edge);
+                        gc.add_edge_to_indices(&mut edge);
                     }
                 }
                 UndoOp::UpdateNodes(mut vec) => {
                     for (node, old_set) in vec.iter_mut().rev() {
                         AttributeSet_Free(node.attributes);
                         node.attributes.write(*old_set);
-                        GraphContext_AddNodeToIndices(gc, node);
+                        gc.add_node_to_indices(node);
                     }
                 }
                 UndoOp::UpdateEdges(mut vec) => {
                     for (edge, old_set) in vec.iter_mut().rev() {
                         AttributeSet_Free(edge.attributes);
                         edge.attributes.write(*old_set);
-                        GraphContext_AddEdgeToIndices(gc, edge);
+                        gc.add_edge_to_indices(edge);
                     }
                 }
                 UndoOp::AddLabels(mut vec) => {
                     for (node, labels) in vec.iter_mut().rev() {
-                        GraphContext_DeleteNodeFromIndices(
-                            gc,
-                            node,
-                            labels.as_mut_ptr(),
-                            labels.len() as u32,
-                        );
-                        Graph_RemoveNodeLabels(
-                            g,
-                            node.id,
-                            labels.as_mut_ptr(),
-                            labels.len() as u32,
-                        );
+                        gc.delete_node_from_indices(node, labels.as_mut_ptr(), labels.len() as u32);
+                        g.remove_node_labels(node.id, labels.as_mut_ptr(), labels.len() as u32);
                     }
                 }
                 UndoOp::RemoveLabels(mut vec) => {
                     for (node, labels) in vec.iter_mut().rev() {
-                        Graph_LabelNode(g, node.id, labels.as_mut_ptr(), labels.len() as u32);
-                        GraphContext_AddNodeToIndices(gc, node);
+                        g.label_node(node.id, labels.as_mut_ptr(), labels.len() as u32);
+                        gc.add_node_to_indices(node);
                     }
                 }
                 UndoOp::AddSchema(schema_id, schema_type) => {
-                    GraphContext_RemoveSchema(gc, schema_id, schema_type);
+                    gc.remove_schema(schema_id, schema_type);
                     if schema_type == SchemaType::Node {
-                        Graph_RemoveLabel(g, schema_id);
+                        g.remove_label(schema_id);
                     } else {
-                        Graph_RemoveRelation(g, schema_id);
+                        g.remove_relation(schema_id);
                     }
                 }
                 UndoOp::AddAttribute(attribute_id) => {
-                    GraphContext_RemoveAttribute(gc, attribute_id);
+                    gc.remove_attribute(attribute_id);
                 }
                 UndoOp::CreateIndex(schema_type, label, field, index_field_type) => {
-                    GraphContext_DeleteIndex(gc, schema_type, label, field, index_field_type);
+                    gc.delete_index(schema_type, label, field, index_field_type);
                 }
             }
         }

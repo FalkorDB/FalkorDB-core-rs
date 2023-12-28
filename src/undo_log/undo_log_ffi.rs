@@ -169,7 +169,10 @@ unsafe extern "C" fn UndoLog_Rollback(
     log: UndoLog,
     gc: *mut GraphContext,
 ) {
-    (log as *mut _UndoLog).as_mut().unwrap().rollback(gc);
+    (log as *mut _UndoLog)
+        .as_mut()
+        .unwrap()
+        .rollback(&mut GraphContextAPI { context: gc });
     drop(Box::from_raw(log as *mut _UndoLog));
 }
 
