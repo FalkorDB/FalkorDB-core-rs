@@ -43,6 +43,15 @@ pub struct Node {
     pub id: EntityID,
 }
 
+impl Node {
+    pub fn set_attributes(&mut self, set: *mut AttributeSet) {
+        unsafe{ 
+            AttributeSet_Free(self.attributes);
+            self.attributes.write(*set);
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Edge {
@@ -52,6 +61,15 @@ pub struct Edge {
     pub relation_id: RelationID,
     pub src_id: NodeID,
     pub dest_id: NodeID,
+}
+
+impl Edge {
+    pub fn set_attributes(&mut self, set: *mut AttributeSet) {
+        unsafe{ 
+            AttributeSet_Free(self.attributes);
+            self.attributes.write(*set);
+        }
+    }
 }
 
 extern "C" {

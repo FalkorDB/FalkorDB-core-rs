@@ -246,7 +246,7 @@ impl _UndoLog {
         gc: &mut GraphContextAPI,
     ) {
         let mut g = gc.get_graph();
-        while let Some(op) = self.ops.pop() {
+        for op in self.ops.drain(..).rev() {
             match op {
                 UndoOp::CreateNodes(mut nodes) => {
                     for node in nodes.iter_mut().rev() {
@@ -290,15 +290,13 @@ impl _UndoLog {
                 }
                 UndoOp::UpdateNodes(mut vec) => {
                     for (node, old_set) in vec.iter_mut().rev() {
-                        AttributeSet_Free(node.attributes);
-                        node.attributes.write(*old_set);
+                        node.set_attributes(old_set);
                         gc.add_node_to_indices(node);
                     }
                 }
                 UndoOp::UpdateEdges(mut vec) => {
                     for (edge, old_set) in vec.iter_mut().rev() {
-                        AttributeSet_Free(edge.attributes);
-                        edge.attributes.write(*old_set);
+                        edge.set_attributes(old_set);
                         gc.add_edge_to_indices(edge);
                     }
                 }
