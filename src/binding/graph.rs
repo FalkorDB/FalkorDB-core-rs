@@ -49,8 +49,11 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn set_attributes(&mut self, set: *mut AttributeSet) {
-        unsafe{ 
+    pub fn set_attributes(
+        &mut self,
+        set: *mut AttributeSet,
+    ) {
+        unsafe {
             AttributeSet_Free(self.attributes);
             self.attributes.write(*set);
         }
@@ -69,8 +72,11 @@ pub struct Edge {
 }
 
 impl Edge {
-    pub fn set_attributes(&mut self, set: *mut AttributeSet) {
-        unsafe{ 
+    pub fn set_attributes(
+        &mut self,
+        set: *mut AttributeSet,
+    ) {
+        unsafe {
             AttributeSet_Free(self.attributes);
             self.attributes.write(*set);
         }
