@@ -20,11 +20,11 @@ enum UndoOp {
     CreateIndex(SchemaType, *const c_char, *const c_char, IndexFieldType),
 }
 
-pub struct _UndoLog {
+pub struct UndoLog {
     ops: Vec<UndoOp>,
 }
 
-impl Drop for _UndoLog {
+impl Drop for UndoLog {
     fn drop(&mut self) {
         for op in self.ops.iter_mut() {
             match op {
@@ -54,7 +54,7 @@ impl Drop for _UndoLog {
     }
 }
 
-impl _UndoLog {
+impl UndoLog {
     pub fn new() -> Self {
         Self { ops: Vec::new() }
     }
