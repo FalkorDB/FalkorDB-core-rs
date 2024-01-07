@@ -5,6 +5,8 @@
 
 use std::ffi::{c_char, c_void};
 
+use crate::schema::schema::SchemaType;
+
 pub type NodeID = i64;
 pub type EntityID = i64;
 pub type LabelID = i32;
@@ -13,22 +15,8 @@ pub type RelationID = i32;
 pub type AttributeID = i32;
 pub type AttributeSet = *mut c_void;
 
-#[repr(C)]
-pub struct Graph {
-    // TODO
-}
-
-#[repr(C)]
-pub struct GraphContext {
-    // TODO
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, PartialEq)]
-pub enum SchemaType {
-    Node,
-    Edge,
-}
+pub type Graph = *mut c_void;
+pub type GraphContext = *mut c_void;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -39,6 +27,25 @@ pub enum IndexFieldType {
     Geo = 0x04,
     String = 0x08,
     Vector = 0x10,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct GraphEntity {
+    pub attributes: *mut AttributeSet,
+    pub id: EntityID,
+}
+
+impl GraphEntity {
+    pub fn set_attributes(
+        &mut self,
+        set: *mut AttributeSet,
+    ) {
+        unsafe {
+            AttributeSet_Free(self.attributes);
+            self.attributes.write(*set);
+        }
+    }
 }
 
 #[repr(C)]
@@ -85,88 +92,88 @@ impl Edge {
 
 extern "C" {
     fn Graph_CreateNode(
-        g: *mut Graph,
+        g: Graph,
         n: *mut Node,
         labels: *mut LabelID,
         label_count: u32,
     );
     fn Graph_CreateEdge(
-        g: *mut Graph,
+        g: Graph,
         src: NodeID,
         dest: NodeID,
         r: RelationID,
         e: *mut Edge,
     );
     fn Graph_DeleteNodes(
-        g: *mut Graph,
+        g: Graph,
         nodes: *mut Node,
         count: u64,
     );
     fn Graph_DeleteEdges(
-        g: *mut Graph,
+        g: Graph,
         edges: *mut Edge,
         count: u64,
     );
     fn Graph_LabelNode(
-        g: *mut Graph,
+        g: Graph,
         id: NodeID,
         lbls: *mut LabelID,
         lbl_count: u32,
     );
     fn Graph_RemoveNodeLabels(
-        g: *mut Graph,
+        g: Graph,
         id: NodeID,
         lbls: *mut LabelID,
         lbl_count: u32,
     );
     fn Graph_RemoveLabel(
-        g: *mut Graph,
+        g: Graph,
         label_id: LabelID,
     );
     fn Graph_RemoveRelation(
-        g: *mut Graph,
+        g: Graph,
         relation_id: RelationID,
     );
-    fn GraphContext_GetGraph(gc: *mut GraphContext) -> *mut Graph;
+    fn GraphContext_GetGraph(gc: GraphContext) -> Graph;
     fn GraphContext_RemoveSchema(
-        gc: *mut GraphContext,
+        gc: GraphContext,
         schema_id: i32,
         t: SchemaType,
     );
     fn GraphContext_RemoveAttribute(
-        gc: *mut GraphContext,
+        gc: GraphContext,
         id: AttributeID,
     );
     fn GraphContext_DeleteIndex(
-        gc: *mut GraphContext,
+        gc: GraphContext,
         schema_type: SchemaType,
         label: *const c_char,
         field: *const c_char,
         t: IndexFieldType,
     ) -> i32;
     fn GraphContext_AddNodeToIndices(
-        gc: *mut GraphContext,
+        gc: GraphContext,
         n: *mut Node,
     );
     fn GraphContext_AddEdgeToIndices(
-        gc: *mut GraphContext,
+        gc: GraphContext,
         e: *mut Edge,
     );
     fn GraphContext_DeleteNodeFromIndices(
-        gc: *mut GraphContext,
+        gc: GraphContext,
         n: *mut Node,
         lbls: *mut LabelID,
         lbl_count: u32,
     );
     fn GraphContext_DeleteEdgeFromIndices(
-        gc: *mut GraphContext,
+        gc: GraphContext,
         e: *mut Edge,
     );
     pub fn AttributeSet_Free(set: *mut AttributeSet);
 }
 
 pub struct GraphAPI {
-    pub graph: *mut Graph,
+    pub graph: Graph,
 }
 
 impl GraphAPI {
@@ -248,7 +255,7 @@ impl GraphAPI {
 }
 
 pub struct GraphContextAPI {
-    pub context: *mut GraphContext,
+    pub context: GraphContext,
 }
 
 impl GraphContextAPI {
@@ -321,5 +328,4 @@ impl GraphContextAPI {
             GraphContext_DeleteEdgeFromIndices(self.context, e);
         }
     }
-    // pub fn AttributeSet_Free(set: *mut AttributeSet);
 }

@@ -4,7 +4,7 @@
  */
 use std::{ffi::c_char, ptr::null_mut};
 
-use crate::binding::graph::*;
+use crate::{binding::graph::*, schema::schema::SchemaType};
 
 enum UndoOp {
     CreateNodes(Vec<Node>),

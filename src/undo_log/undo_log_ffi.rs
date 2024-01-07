@@ -5,7 +5,7 @@
 
 use std::{ffi::c_char, slice::from_raw_parts};
 
-use crate::binding::graph::*;
+use crate::{binding::graph::*, schema::schema::SchemaType};
 
 use super::undo_log::*;
 
@@ -13,7 +13,7 @@ type _UndoLog = *mut UndoLog;
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_New() -> _UndoLog {
-    Box::into_raw(Box::new(UndoLog::new())) as *mut _
+    Box::into_raw(Box::new(UndoLog::new()))
 }
 
 #[no_mangle]
@@ -137,7 +137,7 @@ unsafe extern "C" fn UndoLog_CreateIndex(
 #[no_mangle]
 unsafe extern "C" fn UndoLog_Rollback(
     log: _UndoLog,
-    gc: *mut GraphContext,
+    gc: GraphContext,
 ) {
     log.as_mut()
         .unwrap()
