@@ -142,7 +142,7 @@ unsafe extern "C" fn UndoLog_Rollback(
     log.as_mut()
         .unwrap()
         .rollback(&mut GraphContextAPI { context: gc });
-    drop(Box::from_raw(log as *mut _UndoLog));
+    drop(Box::from_raw(log));
 }
 
 #[no_mangle]
