@@ -13,7 +13,7 @@ type _UndoLog = *mut UndoLog;
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_New() -> _UndoLog {
-    Box::into_raw(Box::new(UndoLog::new())) as *mut _
+    Box::into_raw(Box::new(UndoLog::new()))
 }
 
 #[no_mangle]
