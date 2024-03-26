@@ -133,16 +133,6 @@ unsafe extern "C" fn RG_Matrix_extract_row(
 }
 
 #[no_mangle]
-unsafe extern "C" fn RG_Matrix_extract_col(
-    c: _Matrix,
-    v: GrB_Vector,
-    i: GrB_Index,
-) -> GrB_Info {
-    c.as_ref().unwrap().extract_col(v, i);
-    GrB_Info_GrB_SUCCESS
-}
-
-#[no_mangle]
 unsafe extern "C" fn RG_Matrix_removeElement_BOOL(
     c: _Matrix,
     i: GrB_Index,

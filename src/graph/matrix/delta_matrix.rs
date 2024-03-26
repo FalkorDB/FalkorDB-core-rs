@@ -7,14 +7,18 @@ use std::{mem::MaybeUninit, ptr::null_mut};
 
 use libc::pthread_mutex_t;
 
-use crate::binding::graph::{ConfigOptionField, Config_Option_get};
+use crate::{
+    binding::graph::{ConfigOptionField, Config_Option_get},
+    grb_check,
+};
 
 use super::{
     sparse_matrix::SparseMatrix,
     GraphBLAS::{
-        GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_Matrix,
-        GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type, GrB_Vector, GxB_ANY_BOOL,
-        GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE, GxB_ISGT_BOOL, GxB_SPARSE,
+        GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_DESC_SCT0,
+        GrB_DESC_T0, GrB_GT_BOOL, GrB_Matrix, GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring,
+        GrB_Type, GrB_Vector, GrB_Vector_free, GrB_Vector_new, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE,
+        GxB_LOR_BOOL, GxB_SPARSE,
     },
 };
 
@@ -431,19 +435,19 @@ impl DeltaMatrix {
         v: GrB_Vector,
         i: u64,
     ) {
-        self.matrix.extract_row(v, null_mut(), i);
-        self.delta_plus.extract_row(v, unsafe { GxB_ANY_BOOL }, i);
-        self.delta_minus.extract_row(v, unsafe { GxB_ISGT_BOOL }, i);
-    }
+        unsafe {
+            let mut vmask = MaybeUninit::uninit();
+            GrB_Vector_new(vmask.as_mut_ptr(), GrB_BOOL, self.ncols());
+            let mask = vmask.assume_init();
 
-    pub fn extract_col(
-        &self,
-        v: GrB_Vector,
-        j: u64,
-    ) {
-        self.matrix.extract_col(v, null_mut(), j);
-        self.delta_plus.extract_col(v, unsafe { GxB_ANY_BOOL }, j);
-        self.delta_minus.extract_col(v, unsafe { GxB_ISGT_BOOL }, j);
+            self.delta_minus
+                .extract_row(mask, null_mut(), null_mut(), i, GrB_DESC_T0);
+            self.matrix
+                .extract_row(v, mask, null_mut(), i, GrB_DESC_SCT0);
+            self.delta_plus
+                .extract_row(v, mask, GxB_LOR_BOOL, i, GrB_DESC_SCT0);
+            GrB_Vector_free(vmask.as_mut_ptr());
+        }
     }
 
     pub fn synchronize(

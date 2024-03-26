@@ -6,10 +6,10 @@
 use std::{mem::MaybeUninit, ptr::null_mut};
 
 use crate::graph::matrix::GraphBLAS::{
-    GrB_Col_extract, GrB_DESC_R, GrB_DESC_T0, GrB_IDENTITY_BOOL, GrB_Info_GrB_SUCCESS,
-    GrB_Matrix_apply, GrB_Matrix_assign_Scalar, GrB_Matrix_clear, GrB_Matrix_eWiseAdd_Semiring,
-    GrB_Matrix_free, GrB_Matrix_removeElement, GrB_Matrix_setElement_BOOL, GrB_mxm,
-    GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field_GxB_HYPER_SWITCH,
+    GrB_Col_extract, GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Info_GrB_SUCCESS, GrB_Matrix_apply,
+    GrB_Matrix_assign_Scalar, GrB_Matrix_clear, GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free,
+    GrB_Matrix_removeElement, GrB_Matrix_setElement_BOOL, GrB_mxm, GxB_ALWAYS_HYPER,
+    GxB_Matrix_Option_set, GxB_Option_Field_GxB_HYPER_SWITCH,
     GxB_Option_Field_GxB_SPARSITY_CONTROL,
 };
 
@@ -324,39 +324,21 @@ impl SparseMatrix {
     pub fn extract_row(
         &self,
         v: GrB_Vector,
+        mask: GrB_Vector,
         accum: GrB_BinaryOp,
         i: u64,
+        desc: GrB_Descriptor,
     ) {
         unsafe {
             grb_check!(GrB_Col_extract(
                 v,
-                null_mut(),
+                mask,
                 accum,
                 self.m,
                 GrB_ALL,
                 self.ncols(),
                 i,
-                GrB_DESC_T0
-            ));
-        }
-    }
-
-    pub fn extract_col(
-        &self,
-        v: GrB_Vector,
-        accum: GrB_BinaryOp,
-        j: u64,
-    ) {
-        unsafe {
-            grb_check!(GrB_Col_extract(
-                v,
-                null_mut(),
-                accum,
-                self.m,
-                GrB_ALL,
-                self.nrows(),
-                j,
-                null_mut()
+                desc
             ));
         }
     }
