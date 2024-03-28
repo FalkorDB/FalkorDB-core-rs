@@ -10,10 +10,9 @@ use crate::grb_check;
 use super::{
     sparse_matrix::SparseMatrix,
     GraphBLAS::{
-        GB_Iterator_opaque, GrB_Info_GrB_NO_VALUE, GrB_Info_GrB_SUCCESS, GrB_Info_GxB_EXHAUSTED,
-        GxB_Iterator_get_BOOL, GxB_rowIterator_attach, GxB_rowIterator_getColIndex,
-        GxB_rowIterator_getRowIndex, GxB_rowIterator_nextCol, GxB_rowIterator_nextRow,
-        GxB_rowIterator_seekRow,
+        GB_Iterator_opaque, GrB_Info, GxB_Iterator_get_BOOL, GxB_rowIterator_attach,
+        GxB_rowIterator_getColIndex, GxB_rowIterator_getRowIndex, GxB_rowIterator_nextCol,
+        GxB_rowIterator_nextRow, GxB_rowIterator_seekRow,
     },
 };
 
@@ -50,19 +49,19 @@ impl SparseMatrixIter {
     ) {
         unsafe {
             match GxB_rowIterator_seekRow(&mut self.it, min_row) {
-                GrB_Info_GxB_EXHAUSTED => self.depleted = true,
-                GrB_Info_GrB_NO_VALUE => {
-                    let mut info = GrB_Info_GrB_NO_VALUE;
-                    while info == GrB_Info_GrB_NO_VALUE
+                GrB_Info::GxB_EXHAUSTED => self.depleted = true,
+                GrB_Info::GrB_NO_VALUE => {
+                    let mut info = GrB_Info::GrB_NO_VALUE;
+                    while info == GrB_Info::GrB_NO_VALUE
                         && GxB_rowIterator_getRowIndex(&mut self.it) < max_row
                     {
                         info = GxB_rowIterator_nextRow(&mut self.it);
                     }
 
-                    self.depleted = info != GrB_Info_GrB_SUCCESS
+                    self.depleted = info != GrB_Info::GrB_SUCCESS
                         || GxB_rowIterator_getRowIndex(&mut self.it) > max_row;
                 }
-                GrB_Info_GrB_SUCCESS => {
+                GrB_Info::GrB_SUCCESS => {
                     self.depleted = GxB_rowIterator_getRowIndex(&mut self.it) > max_row;
                 }
                 _ => {
@@ -86,16 +85,16 @@ impl SparseMatrixIter {
             let val = GxB_Iterator_get_BOOL(&mut self.it);
 
             let mut info = GxB_rowIterator_nextCol(&mut self.it);
-            if info != GrB_Info_GrB_SUCCESS {
+            if info != GrB_Info::GrB_SUCCESS {
                 info = GxB_rowIterator_nextRow(&mut self.it);
 
-                while info == GrB_Info_GrB_NO_VALUE
+                while info == GrB_Info::GrB_NO_VALUE
                     && GxB_rowIterator_getRowIndex(&mut self.it) < max_row
                 {
                     info = GxB_rowIterator_nextRow(&mut self.it);
                 }
 
-                self.depleted = info != GrB_Info_GrB_SUCCESS
+                self.depleted = info != GrB_Info::GrB_SUCCESS
                     || GxB_rowIterator_getRowIndex(&mut self.it) > max_row;
             }
 

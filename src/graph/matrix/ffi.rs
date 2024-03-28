@@ -8,11 +8,7 @@ use std::ptr::null_mut;
 use super::{
     delta_matrix::DeltaMatrix,
     delta_matrix_iter::DeltaMatrixIter,
-    GraphBLAS::{
-        GrB_Index, GrB_Info, GrB_Info_GrB_NO_VALUE, GrB_Info_GrB_NULL_POINTER,
-        GrB_Info_GrB_SUCCESS, GrB_Info_GxB_EXHAUSTED, GrB_Matrix, GrB_Semiring, GrB_Type,
-        GrB_Vector,
-    },
+    GraphBLAS::{GrB_Index, GrB_Info, GrB_Matrix, GrB_Semiring, GrB_Type, GrB_Vector},
 };
 
 type _Matrix = *mut DeltaMatrix;
@@ -27,7 +23,7 @@ unsafe extern "C" fn RG_Matrix_new(
     transpose: bool,
 ) -> GrB_Info {
     *a = Box::into_raw(Box::new(DeltaMatrix::new(ty, nrows, ncols, transpose)));
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -64,7 +60,7 @@ unsafe extern "C" fn RG_Matrix_nrows(
     c: _Matrix,
 ) -> GrB_Info {
     *nrows = (&*c).nrows();
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -73,7 +69,7 @@ unsafe extern "C" fn RG_Matrix_ncols(
     c: _Matrix,
 ) -> GrB_Info {
     *ncols = (&*c).ncols();
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -82,7 +78,7 @@ unsafe extern "C" fn RG_Matrix_nvals(
     c: _Matrix,
 ) -> GrB_Info {
     *nvals = (&*c).nvals();
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -92,7 +88,7 @@ unsafe extern "C" fn RG_Matrix_resize(
     ncols_new: GrB_Index,
 ) -> GrB_Info {
     (&mut *c).resize(nrows_new, ncols_new);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -102,7 +98,7 @@ unsafe extern "C" fn RG_Matrix_setElement_BOOL(
     j: GrB_Index,
 ) -> GrB_Info {
     (&mut *c).set_element_bool(i, j);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -116,9 +112,9 @@ unsafe extern "C" fn RG_Matrix_extractElement_BOOL(
         if !x.is_null() {
             *x = v;
         }
-        GrB_Info_GrB_SUCCESS
+        GrB_Info::GrB_SUCCESS
     } else {
-        GrB_Info_GrB_NO_VALUE
+        GrB_Info::GrB_NO_VALUE
     }
 }
 
@@ -129,7 +125,7 @@ unsafe extern "C" fn RG_Matrix_extract_row(
     i: GrB_Index,
 ) -> GrB_Info {
     (&*c).extract_row(v, i);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -139,7 +135,7 @@ unsafe extern "C" fn RG_Matrix_removeElement_BOOL(
     j: GrB_Index,
 ) -> GrB_Info {
     (&mut *c).remove_element_bool(i, j);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -148,7 +144,7 @@ unsafe extern "C" fn RG_Matrix_removeElements(
     m: GrB_Matrix,
 ) -> GrB_Info {
     (&mut *c).remove_elements(m);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -159,7 +155,7 @@ unsafe extern "C" fn RG_mxm(
     b: _Matrix,
 ) -> GrB_Info {
     (&mut *c).mxm(semiring, &*a, &*b);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -170,13 +166,13 @@ unsafe extern "C" fn RG_eWiseAdd(
     b: _Matrix,
 ) -> GrB_Info {
     (&mut *c).element_wise_add(semiring, &*a, &*b);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
 unsafe extern "C" fn RG_Matrix_clear(c: _Matrix) -> GrB_Info {
     (&mut *c).clear();
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -185,7 +181,7 @@ unsafe extern "C" fn RG_Matrix_copy(
     a: _Matrix,
 ) -> GrB_Info {
     (&mut *c).copy(&*a);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -194,7 +190,7 @@ unsafe extern "C" fn RG_Matrix_export(
     c: _Matrix,
 ) -> GrB_Info {
     *a = (&*c).export().grb_matrix();
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -203,7 +199,7 @@ unsafe extern "C" fn RG_Matrix_pending(
     pending: *mut bool,
 ) -> GrB_Info {
     *pending = (&*c).pending();
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -212,7 +208,7 @@ unsafe extern "C" fn RG_Matrix_wait(
     force_sync: bool,
 ) -> GrB_Info {
     (&mut *c).wait(force_sync);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -236,7 +232,7 @@ unsafe extern "C" fn RG_MatrixTupleIter_attach(
     a: _Matrix,
 ) -> GrB_Info {
     (&mut *iter).attach(&*a);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -247,13 +243,13 @@ unsafe extern "C" fn RG_MatrixTupleIter_AttachRange(
     max_row: GrB_Index,
 ) -> GrB_Info {
     (&mut *iter).attach_range(&*a, min_row, max_row);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
 unsafe extern "C" fn RG_MatrixTupleIter_detach(iter: _MatrixTupleIter) -> GrB_Info {
     (&mut *iter).detach();
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -270,7 +266,7 @@ unsafe extern "C" fn RG_MatrixTupleIter_iterate_row(
     row_idx: GrB_Index,
 ) -> GrB_Info {
     (&mut *iter).iterate_row(row_idx);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -280,7 +276,7 @@ unsafe extern "C" fn RG_MatrixTupleIter_iterate_range(
     end_row_idx: GrB_Index,
 ) -> GrB_Info {
     (&mut *iter).iterate_range(start_row_idx, end_row_idx);
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }
 
 #[no_mangle]
@@ -301,15 +297,15 @@ unsafe extern "C" fn RG_MatrixTupleIter_next_BOOL(
             if !val.is_null() {
                 *val = v;
             }
-            GrB_Info_GrB_SUCCESS
+            GrB_Info::GrB_SUCCESS
         }
-        Ok(None) => GrB_Info_GxB_EXHAUSTED,
-        _ => GrB_Info_GrB_NULL_POINTER,
+        Ok(None) => GrB_Info::GxB_EXHAUSTED,
+        _ => GrB_Info::GrB_NULL_POINTER,
     }
 }
 
 #[no_mangle]
 unsafe extern "C" fn RG_MatrixTupleIter_reset(iter: _MatrixTupleIter) -> GrB_Info {
     (&mut *iter).reset();
-    GrB_Info_GrB_SUCCESS
+    GrB_Info::GrB_SUCCESS
 }

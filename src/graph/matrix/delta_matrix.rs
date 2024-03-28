@@ -470,13 +470,13 @@ impl DeltaMatrix {
 // cargo test
 #[cfg(test)]
 mod tests {
-    use crate::graph::matrix::GraphBLAS::{GrB_BOOL, GrB_Mode_GrB_NONBLOCKING, GrB_init};
+    use crate::graph::matrix::GraphBLAS::{GrB_BOOL, GrB_Mode, GrB_init};
 
     use super::DeltaMatrix;
 
     #[test]
     fn test_new_matrix() {
-        unsafe { GrB_init(GrB_Mode_GrB_NONBLOCKING) };
+        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
         let nrows = 100;
         let ncols = 100;
         let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);

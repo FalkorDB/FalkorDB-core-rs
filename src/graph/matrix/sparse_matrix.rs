@@ -6,26 +6,24 @@
 use std::{mem::MaybeUninit, ptr::null_mut};
 
 use crate::graph::matrix::GraphBLAS::{
-    GrB_Col_extract, GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Info_GrB_SUCCESS, GrB_Matrix_apply,
-    GrB_Matrix_assign_Scalar, GrB_Matrix_clear, GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free,
-    GrB_Matrix_removeElement, GrB_Matrix_setElement_BOOL, GrB_mxm, GxB_ALWAYS_HYPER,
-    GxB_Matrix_Option_set, GxB_Option_Field_GxB_HYPER_SWITCH,
-    GxB_Option_Field_GxB_SPARSITY_CONTROL,
+    GrB_Col_extract, GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Matrix_apply, GrB_Matrix_assign_Scalar,
+    GrB_Matrix_clear, GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free, GrB_Matrix_removeElement,
+    GrB_Matrix_setElement_BOOL, GrB_WaitMode, GrB_mxm, GxB_ALWAYS_HYPER, GxB_Matrix_Option_set,
+    GxB_Option_Field,
 };
 
 use super::GraphBLAS::{
-    GrB_ALL, GrB_BinaryOp, GrB_Descriptor, GrB_Index, GrB_Info_GrB_NO_VALUE, GrB_Matrix,
-    GrB_Matrix_assign, GrB_Matrix_extractElement_BOOL, GrB_Matrix_ncols, GrB_Matrix_new,
-    GrB_Matrix_nrows, GrB_Matrix_nvals, GrB_Matrix_resize, GrB_Matrix_wait, GrB_Scalar,
-    GrB_Semiring, GrB_Type, GrB_Vector, GrB_WaitMode_GrB_MATERIALIZE, GrB_transpose,
-    GxB_Matrix_Pending,
+    GrB_ALL, GrB_BinaryOp, GrB_Descriptor, GrB_Index, GrB_Info, GrB_Matrix, GrB_Matrix_assign,
+    GrB_Matrix_extractElement_BOOL, GrB_Matrix_ncols, GrB_Matrix_new, GrB_Matrix_nrows,
+    GrB_Matrix_nvals, GrB_Matrix_resize, GrB_Matrix_wait, GrB_Scalar, GrB_Semiring, GrB_Type,
+    GrB_Vector, GrB_transpose, GxB_Matrix_Pending,
 };
 
 #[macro_export]
 macro_rules! grb_check {
     ($exp: expr) => {
         let x = $exp;
-        debug_assert_eq!(GrB_Info_GrB_SUCCESS, x);
+        debug_assert_eq!(GrB_Info::GrB_SUCCESS, x);
     };
 }
 
@@ -67,7 +65,7 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GxB_Matrix_Option_set(
                 self.0,
-                GxB_Option_Field_GxB_HYPER_SWITCH,
+                GxB_Option_Field::GxB_HYPER_SWITCH,
                 GxB_ALWAYS_HYPER
             ));
         }
@@ -80,7 +78,7 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GxB_Matrix_Option_set(
                 self.0,
-                GxB_Option_Field_GxB_SPARSITY_CONTROL,
+                GxB_Option_Field::GxB_SPARSITY_CONTROL,
                 sparsity
             ));
         }
@@ -154,14 +152,14 @@ impl SparseMatrix {
         unsafe {
             let mut x = MaybeUninit::uninit();
             let info = GrB_Matrix_extractElement_BOOL(x.as_mut_ptr(), self.0, i, j);
-            if info == GrB_Info_GrB_SUCCESS {
+            if info == GrB_Info::GrB_SUCCESS {
                 Some(x.assume_init())
-            } else if info == GrB_Info_GrB_NO_VALUE {
+            } else if info == GrB_Info::GrB_NO_VALUE {
                 None
             } else {
                 debug_assert!(
                     false,
-                    "GrB_Matrix_extractElement_BOOL failed with error code: {}",
+                    "GrB_Matrix_extractElement_BOOL failed with error code: {:?}",
                     info
                 );
                 None
@@ -200,7 +198,7 @@ impl SparseMatrix {
 
     pub fn wait(&mut self) {
         unsafe {
-            grb_check!(GrB_Matrix_wait(self.0, GrB_WaitMode_GrB_MATERIALIZE));
+            grb_check!(GrB_Matrix_wait(self.0, GrB_WaitMode::GrB_MATERIALIZE));
         }
     }
 
