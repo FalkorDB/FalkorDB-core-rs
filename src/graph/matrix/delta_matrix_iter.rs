@@ -41,9 +41,9 @@ impl<'a> DeltaMatrixIter<'a> {
 
     pub fn is_attached(
         &self,
-        unwrap: &DeltaMatrix,
+        m: &DeltaMatrix,
     ) -> bool {
-        self.matrix.is_some() && std::ptr::eq(self.matrix.unwrap().m(), unwrap.m())
+        self.matrix.is_some() && std::ptr::eq(self.matrix.unwrap().m(), m.m())
     }
 
     pub fn iterate_row(

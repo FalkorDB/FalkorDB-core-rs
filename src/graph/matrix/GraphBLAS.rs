@@ -18,11 +18,11 @@ pub struct __BindgenComplex<T> {
 }
 pub const GB_HAS_CMPLX_MACROS: u32 = 1;
 pub const GxB_IMPLEMENTATION_NAME: &[u8; 22] = b"SuiteSparse:GraphBLAS\0";
-pub const GxB_IMPLEMENTATION_DATE: &[u8; 12] = b"Oct 7, 2023\0";
+pub const GxB_IMPLEMENTATION_DATE: &[u8; 13] = b"Mar 22, 2024\0";
 pub const GxB_IMPLEMENTATION_MAJOR: u32 = 9;
-pub const GxB_IMPLEMENTATION_MINOR: u32 = 0;
+pub const GxB_IMPLEMENTATION_MINOR: u32 = 1;
 pub const GxB_IMPLEMENTATION_SUB: u32 = 0;
-pub const GxB_SPEC_DATE: &[u8; 12] = b"Oct 7, 2023\0";
+pub const GxB_SPEC_DATE: &[u8; 13] = b"Dec 22, 2023\0";
 pub const GxB_SPEC_MAJOR: u32 = 2;
 pub const GxB_SPEC_MINOR: u32 = 1;
 pub const GxB_SPEC_SUB: u32 = 0;
@@ -3696,7 +3696,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_BOOL(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const bool,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3705,7 +3705,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_INT8(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const i8,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3714,7 +3714,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_UINT8(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const u8,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3723,7 +3723,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_INT16(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const i16,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3732,7 +3732,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_UINT16(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const u16,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3741,7 +3741,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_INT32(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const i32,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3750,7 +3750,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_UINT32(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const u32,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3759,7 +3759,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_INT64(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const i64,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3768,7 +3768,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_UINT64(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const u64,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3777,7 +3777,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_FP32(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const f32,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3786,7 +3786,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_FP64(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const f64,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3795,7 +3795,7 @@ extern "C" {
 extern "C" {
     pub fn GxB_Vector_build_FC32(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const GxB_FC32_t,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3804,7 +3804,7 @@ extern "C" {
 extern "C" {
     pub fn GxB_Vector_build_FC64(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const GxB_FC64_t,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3813,7 +3813,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Vector_build_UDT(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         X: *const ::std::os::raw::c_void,
         nvals: GrB_Index,
         dup: GrB_BinaryOp,
@@ -3822,7 +3822,7 @@ extern "C" {
 extern "C" {
     pub fn GxB_Vector_build_Scalar(
         w: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         scalar: GrB_Scalar,
         nvals: GrB_Index,
     ) -> GrB_Info;
@@ -3942,7 +3942,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_BOOL(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut bool,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -3950,7 +3950,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_INT8(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut i8,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -3958,7 +3958,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_UINT8(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut u8,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -3966,7 +3966,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_INT16(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut i16,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -3974,7 +3974,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_UINT16(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut u16,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -3982,7 +3982,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_INT32(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut i32,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -3990,7 +3990,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_UINT32(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut u32,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -3998,7 +3998,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_INT64(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut i64,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -4006,7 +4006,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_UINT64(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut u64,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -4014,7 +4014,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_FP32(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut f32,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -4022,7 +4022,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_FP64(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut f64,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -4030,7 +4030,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GxB_Vector_extractTuples_FC32(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut GxB_FC32_t,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -4038,7 +4038,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GxB_Vector_extractTuples_FC64(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut GxB_FC64_t,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -4046,7 +4046,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_UDT(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         X: *mut ::std::os::raw::c_void,
         nvals: *mut GrB_Index,
         v: GrB_Vector,
@@ -4099,7 +4099,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_BOOL(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const bool,
         nvals: GrB_Index,
@@ -4109,7 +4109,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_INT8(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const i8,
         nvals: GrB_Index,
@@ -4119,7 +4119,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_UINT8(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const u8,
         nvals: GrB_Index,
@@ -4129,7 +4129,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_INT16(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const i16,
         nvals: GrB_Index,
@@ -4139,7 +4139,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_UINT16(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const u16,
         nvals: GrB_Index,
@@ -4149,7 +4149,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_INT32(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const i32,
         nvals: GrB_Index,
@@ -4159,7 +4159,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_UINT32(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const u32,
         nvals: GrB_Index,
@@ -4169,7 +4169,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_INT64(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const i64,
         nvals: GrB_Index,
@@ -4179,7 +4179,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_UINT64(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const u64,
         nvals: GrB_Index,
@@ -4189,7 +4189,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_FP32(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const f32,
         nvals: GrB_Index,
@@ -4199,7 +4199,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_FP64(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const f64,
         nvals: GrB_Index,
@@ -4209,7 +4209,7 @@ extern "C" {
 extern "C" {
     pub fn GxB_Matrix_build_FC32(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const GxB_FC32_t,
         nvals: GrB_Index,
@@ -4219,7 +4219,7 @@ extern "C" {
 extern "C" {
     pub fn GxB_Matrix_build_FC64(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const GxB_FC64_t,
         nvals: GrB_Index,
@@ -4229,7 +4229,7 @@ extern "C" {
 extern "C" {
     pub fn GrB_Matrix_build_UDT(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         X: *const ::std::os::raw::c_void,
         nvals: GrB_Index,
@@ -4239,7 +4239,7 @@ extern "C" {
 extern "C" {
     pub fn GxB_Matrix_build_Scalar(
         C: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         J: *const GrB_Index,
         scalar: GrB_Scalar,
         nvals: GrB_Index,
@@ -4489,7 +4489,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_BOOL(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut bool,
         nvals: *mut GrB_Index,
@@ -4498,7 +4498,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_INT8(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut i8,
         nvals: *mut GrB_Index,
@@ -4507,7 +4507,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_UINT8(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut u8,
         nvals: *mut GrB_Index,
@@ -4516,7 +4516,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_INT16(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut i16,
         nvals: *mut GrB_Index,
@@ -4525,7 +4525,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_UINT16(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut u16,
         nvals: *mut GrB_Index,
@@ -4534,7 +4534,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_INT32(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut i32,
         nvals: *mut GrB_Index,
@@ -4543,7 +4543,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_UINT32(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut u32,
         nvals: *mut GrB_Index,
@@ -4552,7 +4552,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_INT64(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut i64,
         nvals: *mut GrB_Index,
@@ -4561,7 +4561,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_UINT64(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut u64,
         nvals: *mut GrB_Index,
@@ -4570,7 +4570,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_FP32(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut f32,
         nvals: *mut GrB_Index,
@@ -4579,7 +4579,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_FP64(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut f64,
         nvals: *mut GrB_Index,
@@ -4588,7 +4588,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GxB_Matrix_extractTuples_FC32(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut GxB_FC32_t,
         nvals: *mut GrB_Index,
@@ -4597,7 +4597,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GxB_Matrix_extractTuples_FC64(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut GxB_FC64_t,
         nvals: *mut GrB_Index,
@@ -4606,7 +4606,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_UDT(
-        I: *mut GrB_Index,
+        Ilist: *mut GrB_Index,
         J: *mut GrB_Index,
         X: *mut ::std::os::raw::c_void,
         nvals: *mut GrB_Index,
@@ -4684,6 +4684,7 @@ pub const GxB_Option_Field_GxB_JIT_CACHE_PATH: GxB_Option_Field = 7030;
 pub const GxB_Option_Field_GxB_JIT_C_CMAKE_LIBS: GxB_Option_Field = 7031;
 pub const GxB_Option_Field_GxB_JIT_USE_CMAKE: GxB_Option_Field = 7032;
 pub const GxB_Option_Field_GxB_JIT_ERROR_LOG: GxB_Option_Field = 7033;
+pub const GxB_Option_Field_GxB_JIT_CUDA_PREFACE: GxB_Option_Field = 7100;
 pub const GxB_Option_Field_GxB_SPARSITY_STATUS: GxB_Option_Field = 7034;
 pub const GxB_Option_Field_GxB_IS_HYPER: GxB_Option_Field = 7035;
 pub const GxB_Option_Field_GxB_SPARSITY_CONTROL: GxB_Option_Field = 7036;
@@ -4903,14 +4904,14 @@ pub const GrB_Field_GrB_API_VER_MINOR: GrB_Field = 15;
 pub const GrB_Field_GrB_API_VER_PATCH: GrB_Field = 16;
 pub const GrB_Field_GrB_BLOCKING_MODE: GrB_Field = 17;
 pub const GrB_Field_GrB_STORAGE_ORIENTATION_HINT: GrB_Field = 100;
-pub const GrB_Field_GrB_ELTYPE_CODE: GrB_Field = 102;
-pub const GrB_Field_GrB_ELTYPE_STRING: GrB_Field = 106;
-pub const GrB_Field_GrB_INPUT1TYPE_CODE: GrB_Field = 103;
-pub const GrB_Field_GrB_INPUT2TYPE_CODE: GrB_Field = 104;
-pub const GrB_Field_GrB_OUTPUTTYPE_CODE: GrB_Field = 105;
-pub const GrB_Field_GrB_INPUT1TYPE_STRING: GrB_Field = 107;
-pub const GrB_Field_GrB_INPUT2TYPE_STRING: GrB_Field = 108;
-pub const GrB_Field_GrB_OUTPUTTYPE_STRING: GrB_Field = 109;
+pub const GrB_Field_GrB_EL_TYPE_CODE: GrB_Field = 102;
+pub const GrB_Field_GrB_EL_TYPE_STRING: GrB_Field = 106;
+pub const GrB_Field_GrB_INP0_TYPE_CODE: GrB_Field = 103;
+pub const GrB_Field_GrB_INP1_TYPE_CODE: GrB_Field = 104;
+pub const GrB_Field_GrB_OUTP_TYPE_CODE: GrB_Field = 105;
+pub const GrB_Field_GrB_INP0_TYPE_STRING: GrB_Field = 107;
+pub const GrB_Field_GrB_INP1_TYPE_STRING: GrB_Field = 108;
+pub const GrB_Field_GrB_OUTP_TYPE_STRING: GrB_Field = 109;
 pub const GrB_Field_GrB_SIZE: GrB_Field = 110;
 pub const GrB_Field_GxB_JIT_C_NAME: GrB_Field = 7041;
 pub const GrB_Field_GxB_JIT_C_DEFINITION: GrB_Field = 7042;
@@ -5862,7 +5863,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         u: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -5873,7 +5874,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         A: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -5886,7 +5887,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         A: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         j: GrB_Index,
         desc: GrB_Descriptor,
@@ -5898,7 +5899,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         u: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -5909,7 +5910,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         A: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -5922,7 +5923,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         u: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         j: GrB_Index,
         desc: GrB_Descriptor,
@@ -5946,7 +5947,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: bool,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -5957,7 +5958,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: i8,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -5968,7 +5969,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: u8,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -5979,7 +5980,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: i16,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -5990,7 +5991,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: u16,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6001,7 +6002,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: i32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6012,7 +6013,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: u32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6023,7 +6024,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: i64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6034,7 +6035,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: u64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6045,7 +6046,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: f32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6056,7 +6057,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: f64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6067,7 +6068,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: GxB_FC32_t,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6078,7 +6079,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: GxB_FC64_t,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6089,7 +6090,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: *mut ::std::os::raw::c_void,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6100,7 +6101,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: GrB_Scalar,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6111,7 +6112,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: bool,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6124,7 +6125,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: i8,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6137,7 +6138,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: u8,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6150,7 +6151,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: i16,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6163,7 +6164,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: u16,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6176,7 +6177,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: i32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6189,7 +6190,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: u32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6202,7 +6203,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: i64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6215,7 +6216,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: u64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6228,7 +6229,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: f32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6241,7 +6242,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: f64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6254,7 +6255,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: GxB_FC32_t,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6267,7 +6268,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: GxB_FC64_t,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6280,7 +6281,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: *mut ::std::os::raw::c_void,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6293,7 +6294,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: GrB_Scalar,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6306,7 +6307,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         u: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6317,7 +6318,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         A: GrB_Matrix,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6330,7 +6331,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         u: GrB_Vector,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         j: GrB_Index,
         desc: GrB_Descriptor,
@@ -6354,7 +6355,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: bool,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6365,7 +6366,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: i8,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6376,7 +6377,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: u8,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6387,7 +6388,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: i16,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6398,7 +6399,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: u16,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6409,7 +6410,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: i32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6420,7 +6421,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: u32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6431,7 +6432,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: i64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6442,7 +6443,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: u64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6453,7 +6454,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: f32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6464,7 +6465,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: f64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6475,7 +6476,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: GxB_FC32_t,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6486,7 +6487,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: GxB_FC64_t,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6497,7 +6498,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: *mut ::std::os::raw::c_void,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6508,7 +6509,7 @@ extern "C" {
         mask: GrB_Vector,
         accum: GrB_BinaryOp,
         x: GrB_Scalar,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         desc: GrB_Descriptor,
     ) -> GrB_Info;
@@ -6519,7 +6520,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: bool,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6532,7 +6533,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: i8,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6545,7 +6546,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: u8,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6558,7 +6559,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: i16,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6571,7 +6572,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: u16,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6584,7 +6585,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: i32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6597,7 +6598,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: u32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6610,7 +6611,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: i64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6623,7 +6624,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: u64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6636,7 +6637,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: f32,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6649,7 +6650,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: f64,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6662,7 +6663,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: GxB_FC32_t,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6675,7 +6676,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: GxB_FC64_t,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6688,7 +6689,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: *mut ::std::os::raw::c_void,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,
@@ -6701,7 +6702,7 @@ extern "C" {
         Mask: GrB_Matrix,
         accum: GrB_BinaryOp,
         x: GrB_Scalar,
-        I: *const GrB_Index,
+        Ilist: *const GrB_Index,
         ni: GrB_Index,
         J: *const GrB_Index,
         nj: GrB_Index,

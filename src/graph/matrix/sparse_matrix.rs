@@ -24,49 +24,50 @@ use super::GraphBLAS::{
 #[macro_export]
 macro_rules! grb_check {
     ($exp: expr) => {
-        debug_assert_eq!(GrB_Info_GrB_SUCCESS, $exp);
+        let x = $exp;
+        debug_assert_eq!(GrB_Info_GrB_SUCCESS, x);
+        x
     };
 }
 
-pub struct SparseMatrix {
-    m: GrB_Matrix,
-}
+pub struct SparseMatrix(GrB_Matrix);
 
 impl Drop for SparseMatrix {
     fn drop(&mut self) {
         unsafe {
-            grb_check!(GrB_Matrix_free(&mut self.m));
+            grb_check!(GrB_Matrix_free(&mut self.0));
         }
     }
 }
 
 impl SparseMatrix {
+    #[must_use]
     pub fn new(
         ty: GrB_Type,
         nrows: u64,
         ncols: u64,
     ) -> Self {
         unsafe {
-            let mut m: MaybeUninit<GrB_Matrix> = MaybeUninit::uninit();
+            let mut m = MaybeUninit::uninit();
             grb_check!(GrB_Matrix_new(m.as_mut_ptr(), ty, nrows, ncols));
-            Self { m: m.assume_init() }
+            Self { 0: m.assume_init() }
         }
     }
 
     pub fn grb_matrix_ref(&self) -> GrB_Matrix {
-        self.m
+        self.0
     }
 
     pub fn grb_matrix(mut self) -> GrB_Matrix {
-        let m = self.m;
-        self.m = null_mut();
+        let m = self.0;
+        self.0 = null_mut();
         m
     }
 
     pub fn set_always_hyper(&mut self) {
         unsafe {
             grb_check!(GxB_Matrix_Option_set(
-                self.m,
+                self.0,
                 GxB_Option_Field_GxB_HYPER_SWITCH,
                 GxB_ALWAYS_HYPER
             ));
@@ -79,7 +80,7 @@ impl SparseMatrix {
     ) {
         unsafe {
             grb_check!(GxB_Matrix_Option_set(
-                self.m,
+                self.0,
                 GxB_Option_Field_GxB_SPARSITY_CONTROL,
                 sparsity
             ));
@@ -89,7 +90,7 @@ impl SparseMatrix {
     pub fn nrows(&self) -> u64 {
         unsafe {
             let mut nrows: MaybeUninit<u64> = MaybeUninit::uninit();
-            grb_check!(GrB_Matrix_nrows(nrows.as_mut_ptr(), self.m));
+            grb_check!(GrB_Matrix_nrows(nrows.as_mut_ptr(), self.0));
             nrows.assume_init()
         }
     }
@@ -97,7 +98,7 @@ impl SparseMatrix {
     pub fn ncols(&self) -> u64 {
         unsafe {
             let mut ncols: MaybeUninit<u64> = MaybeUninit::uninit();
-            grb_check!(GrB_Matrix_ncols(ncols.as_mut_ptr(), self.m));
+            grb_check!(GrB_Matrix_ncols(ncols.as_mut_ptr(), self.0));
             ncols.assume_init()
         }
     }
@@ -105,7 +106,7 @@ impl SparseMatrix {
     pub fn nvals(&self) -> u64 {
         unsafe {
             let mut nvals: MaybeUninit<u64> = MaybeUninit::uninit();
-            grb_check!(GrB_Matrix_nvals(nvals.as_mut_ptr(), self.m));
+            grb_check!(GrB_Matrix_nvals(nvals.as_mut_ptr(), self.0));
             nvals.assume_init()
         }
     }
@@ -116,13 +117,13 @@ impl SparseMatrix {
         ncols_new: u64,
     ) {
         unsafe {
-            grb_check!(GrB_Matrix_resize(self.m, nrows_new, ncols_new));
+            grb_check!(GrB_Matrix_resize(self.0, nrows_new, ncols_new));
         }
     }
 
     pub fn clear(&mut self) {
         unsafe {
-            grb_check!(GrB_Matrix_clear(self.m));
+            grb_check!(GrB_Matrix_clear(self.0));
         }
     }
 
@@ -133,11 +134,11 @@ impl SparseMatrix {
         unsafe {
             if matrix.nvals() > 0 {
                 grb_check!(GrB_Matrix_apply(
-                    self.m,
+                    self.0,
                     null_mut(),
                     null_mut(),
                     GrB_IDENTITY_BOOL,
-                    matrix.m,
+                    matrix.0,
                     GrB_DESC_R
                 ));
             } else {
@@ -153,7 +154,7 @@ impl SparseMatrix {
     ) -> Option<bool> {
         unsafe {
             let mut x = MaybeUninit::uninit();
-            let info = GrB_Matrix_extractElement_BOOL(x.as_mut_ptr(), self.m, i, j);
+            let info = GrB_Matrix_extractElement_BOOL(x.as_mut_ptr(), self.0, i, j);
             if info == GrB_Info_GrB_SUCCESS {
                 Some(x.assume_init())
             } else if info == GrB_Info_GrB_NO_VALUE {
@@ -176,7 +177,7 @@ impl SparseMatrix {
         x: bool,
     ) {
         unsafe {
-            grb_check!(GrB_Matrix_setElement_BOOL(self.m, x, i, j));
+            grb_check!(GrB_Matrix_setElement_BOOL(self.0, x, i, j));
         }
     }
 
@@ -186,21 +187,21 @@ impl SparseMatrix {
         j: u64,
     ) {
         unsafe {
-            grb_check!(GrB_Matrix_removeElement(self.m, i, j));
+            grb_check!(GrB_Matrix_removeElement(self.0, i, j));
         }
     }
 
     pub fn pending(&self) -> bool {
         unsafe {
             let mut pending: MaybeUninit<bool> = MaybeUninit::uninit();
-            grb_check!(GxB_Matrix_Pending(self.m, pending.as_mut_ptr()));
+            grb_check!(GxB_Matrix_Pending(self.0, pending.as_mut_ptr()));
             pending.assume_init()
         }
     }
 
     pub fn wait(&mut self) {
         unsafe {
-            grb_check!(GrB_Matrix_wait(self.m, GrB_WaitMode_GrB_MATERIALIZE));
+            grb_check!(GrB_Matrix_wait(self.0, GrB_WaitMode_GrB_MATERIALIZE));
         }
     }
 
@@ -216,7 +217,7 @@ impl SparseMatrix {
     ) {
         unsafe {
             grb_check!(GrB_Matrix_assign(
-                self.m,
+                self.0,
                 mask,
                 null_mut(),
                 n,
@@ -241,7 +242,7 @@ impl SparseMatrix {
     ) {
         unsafe {
             grb_check!(GrB_Matrix_assign_Scalar(
-                self.m,
+                self.0,
                 mask,
                 null_mut(),
                 s,
@@ -264,16 +265,16 @@ impl SparseMatrix {
     ) {
         unsafe {
             grb_check!(GrB_mxm(
-                self.m,
+                self.0,
                 if let Some(mask) = mask {
-                    mask.m
+                    mask.0
                 } else {
                     null_mut()
                 },
                 null_mut(),
                 semiring,
-                m.m,
-                n.m,
+                m.0,
+                n.0,
                 desc,
             ));
         }
@@ -288,16 +289,16 @@ impl SparseMatrix {
     ) {
         unsafe {
             grb_check!(GrB_Matrix_eWiseAdd_Semiring(
-                self.m,
+                self.0,
                 if let Some(mask) = mask {
-                    mask.m
+                    mask.0
                 } else {
                     null_mut()
                 },
                 null_mut(),
                 semiring,
-                if let Some(m) = m { m.m } else { self.m },
-                if let Some(n) = n { n.m } else { self.m },
+                if let Some(m) = m { m.0 } else { self.0 },
+                if let Some(n) = n { n.0 } else { self.0 },
                 null_mut(),
             ));
         }
@@ -312,10 +313,10 @@ impl SparseMatrix {
     ) {
         unsafe {
             grb_check!(GrB_transpose(
-                self.m,
-                if let Some(m) = mask { m.m } else { null_mut() },
+                self.0,
+                if let Some(m) = mask { m.0 } else { null_mut() },
                 accum,
-                if let Some(m) = m { m.m } else { self.m },
+                if let Some(m) = m { m.0 } else { self.0 },
                 desc
             ));
         }
@@ -334,7 +335,7 @@ impl SparseMatrix {
                 v,
                 mask,
                 accum,
-                self.m,
+                self.0,
                 GrB_ALL,
                 self.ncols(),
                 i,

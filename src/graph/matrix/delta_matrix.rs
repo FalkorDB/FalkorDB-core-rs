@@ -7,17 +7,14 @@ use std::{mem::MaybeUninit, ptr::null_mut};
 
 use libc::pthread_mutex_t;
 
-use crate::{
-    binding::graph::{ConfigOptionField, Config_Option_get},
-    grb_check,
-};
+use crate::binding::graph::{ConfigOptionField, Config_Option_get};
 
 use super::{
     sparse_matrix::SparseMatrix,
     GraphBLAS::{
         GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_DESC_SCT0,
-        GrB_DESC_T0, GrB_GT_BOOL, GrB_Matrix, GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring,
-        GrB_Type, GrB_Vector, GrB_Vector_free, GrB_Vector_new, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE,
+        GrB_DESC_T0, GrB_Matrix, GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type,
+        GrB_Vector, GrB_Vector_free, GrB_Vector_new, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE,
         GxB_LOR_BOOL, GxB_SPARSE,
     },
 };
@@ -67,41 +64,37 @@ impl DeltaMatrix {
         transpose: bool,
     ) -> Self {
         unsafe {
-            let mut m = SparseMatrix::new(ty, nrows, ncols);
-            m.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
-            let mut dp = SparseMatrix::new(GrB_BOOL, nrows, ncols);
-            dp.set_sparsity(GxB_HYPERSPARSE);
-            dp.set_always_hyper();
-            let mut dm = SparseMatrix::new(GrB_BOOL, nrows, ncols);
-            dm.set_sparsity(GxB_HYPERSPARSE);
-            dm.set_always_hyper();
-            Self {
+            let mut x = Self {
                 dirty: false,
-                matrix: m,
-                delta_plus: dp,
-                delta_minus: dm,
+                matrix: SparseMatrix::new(ty, nrows, ncols),
+                delta_plus: SparseMatrix::new(GrB_BOOL, nrows, ncols),
+                delta_minus: SparseMatrix::new(GrB_BOOL, nrows, ncols),
                 transposed: if transpose {
-                    let mut m = SparseMatrix::new(ty, ncols, nrows);
-                    m.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
-                    let mut dp = SparseMatrix::new(GrB_BOOL, ncols, nrows);
-                    dp.set_sparsity(GxB_HYPERSPARSE);
-                    dp.set_always_hyper();
-                    let mut dm = SparseMatrix::new(GrB_BOOL, ncols, nrows);
-                    dm.set_sparsity(GxB_HYPERSPARSE);
-                    dm.set_always_hyper();
-                    Some(Box::new(Self {
+                    let mut x = Box::new(Self {
                         dirty: false,
-                        matrix: m,
-                        delta_plus: dp,
-                        delta_minus: dm,
+                        matrix: SparseMatrix::new(ty, ncols, nrows),
+                        delta_plus: SparseMatrix::new(GrB_BOOL, ncols, nrows),
+                        delta_minus: SparseMatrix::new(GrB_BOOL, ncols, nrows),
                         transposed: None,
                         mutex: None,
-                    }))
+                    });
+                    x.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
+                    x.delta_plus.set_sparsity(GxB_HYPERSPARSE);
+                    x.delta_plus.set_always_hyper();
+                    x.delta_minus.set_sparsity(GxB_HYPERSPARSE);
+                    x.delta_minus.set_always_hyper();
+                    Some(x)
                 } else {
                     None
                 },
                 mutex: Some(CMutex::new()),
-            }
+            };
+            x.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
+            x.delta_plus.set_sparsity(GxB_HYPERSPARSE);
+            x.delta_plus.set_always_hyper();
+            x.delta_minus.set_sparsity(GxB_HYPERSPARSE);
+            x.delta_minus.set_always_hyper();
+            x
         }
     }
 
