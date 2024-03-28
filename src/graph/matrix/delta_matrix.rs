@@ -98,8 +98,8 @@ impl DeltaMatrix {
         }
     }
 
-    pub fn transposed(&mut self) -> &mut Option<Box<DeltaMatrix>> {
-        &mut self.transposed
+    pub fn transposed(&mut self) -> Option<&mut Box<DeltaMatrix>> {
+        self.transposed.as_mut()
     }
 
     pub fn dirty(&self) -> bool {
@@ -434,11 +434,10 @@ impl DeltaMatrix {
             let mask = vmask.assume_init();
 
             self.delta_minus
-                .extract_row(mask, null_mut(), null_mut(), i, GrB_DESC_T0);
-            self.matrix
-                .extract_row(v, mask, null_mut(), i, GrB_DESC_SCT0);
+                .extract(mask, null_mut(), null_mut(), i, GrB_DESC_T0);
+            self.matrix.extract(v, mask, null_mut(), i, GrB_DESC_SCT0);
             self.delta_plus
-                .extract_row(v, mask, GxB_LOR_BOOL, i, GrB_DESC_SCT0);
+                .extract(v, mask, GxB_LOR_BOOL, i, GrB_DESC_SCT0);
             GrB_Vector_free(vmask.as_mut_ptr());
         }
     }
@@ -463,5 +462,49 @@ impl DeltaMatrix {
         }
 
         self.mutex.as_mut().unwrap().unlock();
+    }
+}
+
+// to run tests:
+// export RUSTFLAGS='-L /opt/homebrew/opt/libomp/lib -lgraphblas -lomp'
+// cargo test
+#[cfg(test)]
+mod tests {
+    use crate::graph::matrix::GraphBLAS::{GrB_BOOL, GrB_Mode_GrB_NONBLOCKING, GrB_init};
+
+    use super::DeltaMatrix;
+
+    #[test]
+    fn test_new_matrix() {
+        unsafe { GrB_init(GrB_Mode_GrB_NONBLOCKING) };
+        let nrows = 100;
+        let ncols = 100;
+        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
+        assert_eq!(a.m().nvals(), 0);
+        assert_eq!(a.dp().nvals(), 0);
+        assert_eq!(a.dm().nvals(), 0);
+        assert_eq!(a.nrows(), nrows);
+        assert_eq!(a.ncols(), ncols);
+        assert_eq!(a.nvals(), 0);
+        assert_eq!(a.dirty(), false);
+        assert_eq!(a.transposed().is_none(), true);
+
+        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
+        assert_eq!(a.m().nvals(), 0);
+        assert_eq!(a.dp().nvals(), 0);
+        assert_eq!(a.dm().nvals(), 0);
+        assert_eq!(a.nrows(), nrows);
+        assert_eq!(a.ncols(), ncols);
+        assert_eq!(a.nvals(), 0);
+        assert_eq!(a.dirty(), false);
+        assert_eq!(a.transposed().is_some(), true);
+        assert_eq!(a.transposed().unwrap().m().nvals(), 0);
+        assert_eq!(a.transposed().unwrap().dp().nvals(), 0);
+        assert_eq!(a.transposed().unwrap().dm().nvals(), 0);
+        assert_eq!(a.transposed().unwrap().nrows(), ncols);
+        assert_eq!(a.transposed().unwrap().ncols(), nrows);
+        assert_eq!(a.transposed().unwrap().nvals(), 0);
+        assert_eq!(a.transposed().unwrap().dirty(), false);
+        assert_eq!(a.transposed().unwrap().transposed().is_none(), true);
     }
 }

@@ -26,7 +26,6 @@ macro_rules! grb_check {
     ($exp: expr) => {
         let x = $exp;
         debug_assert_eq!(GrB_Info_GrB_SUCCESS, x);
-        x
     };
 }
 
@@ -322,7 +321,7 @@ impl SparseMatrix {
         }
     }
 
-    pub fn extract_row(
+    pub fn extract(
         &self,
         v: GrB_Vector,
         mask: GrB_Vector,
