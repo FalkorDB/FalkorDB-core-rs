@@ -40,17 +40,17 @@ unsafe extern "C" fn RG_Matrix_isDirty(c: _Matrix) -> bool {
 }
 
 #[no_mangle]
-unsafe extern "C" fn RG_Matrix_m(c: _Matrix) -> GrB_Matrix {
+unsafe extern "C" fn RG_Matrix_M(c: _Matrix) -> GrB_Matrix {
     (&*c).m().grb_matrix_ref()
 }
 
 #[no_mangle]
-unsafe extern "C" fn RG_Matrix_dp(c: _Matrix) -> GrB_Matrix {
+unsafe extern "C" fn RG_Matrix_DP(c: _Matrix) -> GrB_Matrix {
     (&*c).dp().grb_matrix_ref()
 }
 
 #[no_mangle]
-unsafe extern "C" fn RG_Matrix_dm(c: _Matrix) -> GrB_Matrix {
+unsafe extern "C" fn RG_Matrix_DM(c: _Matrix) -> GrB_Matrix {
     (&*c).dm().grb_matrix_ref()
 }
 
