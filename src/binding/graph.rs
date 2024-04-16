@@ -88,7 +88,7 @@ pub enum ConfigOptionField {
     VKEY_MAX_ENTITY_COUNT = 8,      // max number of elements in vkey
     MAX_QUEUED_QUERIES = 9,         // max number of queued queries
     QUERY_MEM_CAPACITY = 10, // max mem(bytes) that query/thread can utilize at any given time
-    DELTA_MAX_PENDING_CHANGES = 11, // number of pending changes before RG_Matrix flushed
+    DELTA_MAX_PENDING_CHANGES = 11, // number of pending changes before Delta_Matrix flushed
     NODE_CREATION_BUFFER = 12, // size of buffer to maintain as margin in matrices
     CMD_INFO = 13,           // toggle on/off the GRAPH.INFO
     CMD_INFO_MAX_QUERY_COUNT = 14, // the max number of info queries count
