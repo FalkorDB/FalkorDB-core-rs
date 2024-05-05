@@ -4,19 +4,20 @@
  */
 
 use std::{mem::MaybeUninit, ptr::null_mut};
+use std::sync::Mutex;
 
 use libc::pthread_mutex_t;
 
-use crate::binding::graph::{ConfigOptionField, Config_Option_get};
+use crate::binding::graph::{Config_Option_get, ConfigOptionField};
 
 use super::{
-    sparse_matrix::SparseMatrix,
     GraphBLAS::{
         GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_DESC_SCT0,
         GrB_DESC_T0, GrB_Matrix, GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type,
         GrB_Vector, GrB_Vector_free, GrB_Vector_new, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE,
         GxB_LOR_BOOL, GxB_SPARSE,
     },
+    sparse_matrix::SparseMatrix,
 };
 
 struct CMutex {
@@ -59,7 +60,7 @@ pub struct DeltaMatrix {
     delta_plus: SparseMatrix,
     delta_minus: SparseMatrix,
     transposed: Option<Box<DeltaMatrix>>,
-    mutex: Option<CMutex>,
+    mutex: Option<Mutex<()>>,
 }
 
 impl DeltaMatrix {
@@ -93,7 +94,7 @@ impl DeltaMatrix {
                 } else {
                     None
                 },
-                mutex: Some(CMutex::new()),
+                mutex: Some(Mutex::new(())),
             };
             x.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
             x.delta_plus.set_sparsity(GxB_HYPERSPARSE);
@@ -468,21 +469,23 @@ impl DeltaMatrix {
         nrows: u64,
         ncols: u64,
     ) {
-        if !(self.nrows() < nrows || self.ncols() < ncols) && !self.dirty() {
+        if !(self.nrows() < nrows || self.ncols() < ncols || self.dirty()) {
             return;
         }
 
-        self.mutex.as_mut().unwrap().lock();
+        let m = self.mutex.take();
+        {
+            let _lock = m.as_ref().map(|m| m.lock());
 
-        if self.nrows() < nrows || self.ncols() < ncols {
-            self.resize(nrows, ncols);
+            if self.nrows() < nrows || self.ncols() < ncols {
+                self.resize(nrows, ncols);
+            }
+
+            if self.dirty() {
+                self.wait(false);
+            }
         }
-
-        if self.dirty() {
-            self.wait(false);
-        }
-
-        self.mutex.as_mut().unwrap().unlock();
+        self.mutex = m;
     }
 }
 
@@ -491,7 +494,7 @@ impl DeltaMatrix {
 // cargo test
 #[cfg(test)]
 mod tests {
-    use crate::graph::matrix::GraphBLAS::{GrB_BOOL, GrB_Mode, GrB_init};
+    use crate::graph::matrix::GraphBLAS::{GrB_BOOL, GrB_init, GrB_Mode};
 
     use super::DeltaMatrix;
 
