@@ -47,6 +47,12 @@ impl CMutex {
     }
 }
 
+impl Drop for CMutex {
+    fn drop(&mut self) {
+        unsafe { libc::pthread_mutex_destroy(&mut self.mutex) };
+    }
+}
+
 pub struct DeltaMatrix {
     dirty: bool, // TODO: volatile
     matrix: SparseMatrix,
@@ -179,10 +185,14 @@ impl DeltaMatrix {
             t.set_element_bool(j, i);
         }
 
-        if self.delta_minus.extract_element_bool(i, j).unwrap_or_default() {
+        if self
+            .delta_minus
+            .extract_element_bool(i, j)
+            .unwrap_or_default()
+        {
             self.delta_minus.remove_element(i, j);
             self.set_dirty(true);
-        } else if let None = self.matrix.extract_element_bool(i, j) {
+        } else if self.matrix.extract_element_bool(i, j).is_none() {
             self.delta_plus.set_element_bool(i, j, true);
             self.set_dirty(true);
         }
@@ -193,9 +203,17 @@ impl DeltaMatrix {
         i: u64,
         j: u64,
     ) -> Option<bool> {
-        if self.delta_plus.extract_element_bool(i, j).unwrap_or_default() {
+        if self
+            .delta_plus
+            .extract_element_bool(i, j)
+            .unwrap_or_default()
+        {
             Some(true)
-        } else if self.delta_minus.extract_element_bool(i, j).unwrap_or_default() {
+        } else if self
+            .delta_minus
+            .extract_element_bool(i, j)
+            .unwrap_or_default()
+        {
             None
         } else {
             self.matrix.extract_element_bool(i, j)
@@ -347,10 +365,13 @@ impl DeltaMatrix {
     }
 
     pub fn pending(&self) -> bool {
-        if let Some(t) = self.transposed.as_ref() {
-            if t.pending() {
-                return true;
-            }
+        if self
+            .transposed
+            .as_ref()
+            .map(|t| t.pending())
+            .unwrap_or_default()
+        {
+            return true;
         }
 
         self.matrix.pending() || self.delta_plus.pending() || self.delta_minus.pending()

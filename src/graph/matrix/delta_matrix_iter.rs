@@ -67,7 +67,7 @@ impl<'a> DeltaMatrixIter<'a> {
         }
 
         while let Some((i, j, v)) = self.m_it.next_bool(self.max_row) {
-            if let None = self.matrix.unwrap().dm().extract_element_bool(i, j) {
+            if self.matrix.unwrap().dm().extract_element_bool(i, j).is_none() {
                 return Ok(Some((i, j, v)));
             }
         }
