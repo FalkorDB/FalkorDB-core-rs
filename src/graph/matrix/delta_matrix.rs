@@ -468,7 +468,7 @@ impl DeltaMatrix {
         nrows: u64,
         ncols: u64,
     ) {
-        if !(self.nrows() < nrows || self.ncols() < ncols) && !self.dirty() {
+        if !(self.nrows() < nrows || self.ncols() < ncols || self.dirty()) {
             return;
         }
 
@@ -507,8 +507,8 @@ mod tests {
         assert_eq!(a.nrows(), nrows);
         assert_eq!(a.ncols(), ncols);
         assert_eq!(a.nvals(), 0);
-        assert_eq!(a.dirty(), false);
-        assert_eq!(a.transposed().is_none(), true);
+        assert!(!a.dirty());
+        assert!(a.transposed().is_none());
 
         let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
         assert_eq!(a.m().nvals(), 0);
@@ -517,15 +517,15 @@ mod tests {
         assert_eq!(a.nrows(), nrows);
         assert_eq!(a.ncols(), ncols);
         assert_eq!(a.nvals(), 0);
-        assert_eq!(a.dirty(), false);
-        assert_eq!(a.transposed().is_some(), true);
+        assert!(!a.dirty());
+        assert!(a.transposed().is_some());
         assert_eq!(a.transposed().unwrap().m().nvals(), 0);
         assert_eq!(a.transposed().unwrap().dp().nvals(), 0);
         assert_eq!(a.transposed().unwrap().dm().nvals(), 0);
         assert_eq!(a.transposed().unwrap().nrows(), ncols);
         assert_eq!(a.transposed().unwrap().ncols(), nrows);
         assert_eq!(a.transposed().unwrap().nvals(), 0);
-        assert_eq!(a.transposed().unwrap().dirty(), false);
-        assert_eq!(a.transposed().unwrap().transposed().is_none(), true);
+        assert!(!a.transposed().unwrap().dirty());
+        assert!(a.transposed().unwrap().transposed().is_none());
     }
 }

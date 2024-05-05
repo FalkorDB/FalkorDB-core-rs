@@ -72,7 +72,7 @@ impl<'a> DeltaMatrixIter<'a> {
             }
         }
 
-        while let Some((i, j, v)) = self.dp_it.next_bool(self.max_row) {
+        if let Some((i, j, v)) = self.dp_it.next_bool(self.max_row) {
             return Ok(Some((i, j, v)));
         }
 
