@@ -21,7 +21,7 @@ unsafe extern "C" fn UndoLog_CreateNode(
     log: _UndoLog,
     node: *const Node,
 ) {
-    (&mut *log).create_node(node.read());
+    (*log).create_node(node.read());
 }
 
 #[no_mangle]
@@ -29,7 +29,7 @@ unsafe extern "C" fn UndoLog_CreateEdge(
     log: _UndoLog,
     edge: *const Edge,
 ) {
-    (&mut *log).create_edge(edge.read());
+    (*log).create_edge(edge.read());
 }
 
 #[no_mangle]
@@ -43,7 +43,7 @@ unsafe extern "C" fn UndoLog_DeleteNode(
     let set = n.attributes.read_unaligned();
     n.attributes
         .write((set as u64 | (1u64 << (u64::BITS as usize - 1))) as *mut _);
-    (&mut *log).delete_node(n.id, set, from_raw_parts(labels, labels_count).to_vec());
+    (*log).delete_node(n.id, set, from_raw_parts(labels, labels_count).to_vec());
 }
 
 #[no_mangle]
@@ -55,7 +55,7 @@ unsafe extern "C" fn UndoLog_DeleteEdge(
     let set = e.attributes.read_unaligned();
     e.attributes
         .write((set as u64 | (1u64 << (u64::BITS as usize - 1))) as *mut _);
-    (&mut *log).delete_edge(e.id, e.src_id, e.dest_id, e.relation_id, set);
+    (*log).delete_edge(e.id, e.src_id, e.dest_id, e.relation_id, set);
 }
 
 #[no_mangle]
@@ -64,7 +64,7 @@ unsafe extern "C" fn UndoLog_UpdateNode(
     node: *const Node,
     old_set: AttributeSet,
 ) {
-    (&mut *log).update_node(node.read(), old_set);
+    (*log).update_node(node.read(), old_set);
 }
 
 #[no_mangle]
@@ -73,7 +73,7 @@ unsafe extern "C" fn UndoLog_UpdateEdge(
     edge: *const Edge,
     old_set: AttributeSet,
 ) {
-    (&mut *log).update_edge(edge.read(), old_set);
+    (*log).update_edge(edge.read(), old_set);
 }
 
 #[no_mangle]
@@ -83,7 +83,7 @@ unsafe extern "C" fn UndoLog_AddLabels(
     label_ids: *const LabelID,
     labels_count: usize,
 ) {
-    (&mut *log).add_labels(
+    (*log).add_labels(
         node.read(),
         from_raw_parts(label_ids, labels_count).to_vec(),
     );
@@ -96,7 +96,7 @@ unsafe extern "C" fn UndoLog_RemoveLabels(
     label_ids: *const LabelID,
     labels_count: usize,
 ) {
-    (&mut *log).remove_labels(
+    (*log).remove_labels(
         node.read(),
         from_raw_parts(label_ids, labels_count).to_vec(),
     );
@@ -108,7 +108,7 @@ unsafe extern "C" fn UndoLog_AddSchema(
     schema_id: i32,
     t: SchemaType,
 ) {
-    (&mut *log).add_schema(schema_id, t);
+    (*log).add_schema(schema_id, t);
 }
 
 #[no_mangle]
@@ -116,7 +116,7 @@ unsafe extern "C" fn UndoLog_AddAttribute(
     log: _UndoLog,
     attribute_id: AttributeID,
 ) {
-    (&mut *log).add_attribute(attribute_id);
+    (*log).add_attribute(attribute_id);
 }
 
 #[no_mangle]
@@ -127,7 +127,7 @@ unsafe extern "C" fn UndoLog_CreateIndex(
     field: *const c_char,
     t: IndexFieldType,
 ) {
-    (&mut *log).create_index(st, label, field, t);
+    (*log).create_index(st, label, field, t);
 }
 
 #[no_mangle]
@@ -135,7 +135,7 @@ unsafe extern "C" fn UndoLog_Rollback(
     log: _UndoLog,
     gc: *mut GraphContext,
 ) {
-    (&mut *log).rollback(&mut GraphContextAPI { context: gc });
+    (*log).rollback(&mut GraphContextAPI { context: gc });
     drop(Box::from_raw(log));
 }
 
