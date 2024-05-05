@@ -162,7 +162,7 @@ impl DeltaMatrix {
             t.remove_element_bool(j, i);
         }
 
-        if let Some(true) = self.matrix.extract_element_bool(i, j) {
+        if self.matrix.extract_element_bool(i, j).unwrap_or_default() {
             self.delta_minus.set_element_bool(i, j, true);
         } else {
             self.delta_plus.remove_element(i, j);
@@ -179,7 +179,7 @@ impl DeltaMatrix {
             t.set_element_bool(j, i);
         }
 
-        if let Some(true) = self.delta_minus.extract_element_bool(i, j) {
+        if self.delta_minus.extract_element_bool(i, j).unwrap_or_default() {
             self.delta_minus.remove_element(i, j);
             self.set_dirty(true);
         } else if let None = self.matrix.extract_element_bool(i, j) {
@@ -193,9 +193,9 @@ impl DeltaMatrix {
         i: u64,
         j: u64,
     ) -> Option<bool> {
-        if let Some(true) = self.delta_plus.extract_element_bool(i, j) {
+        if self.delta_plus.extract_element_bool(i, j).unwrap_or_default() {
             Some(true)
-        } else if let Some(true) = self.delta_minus.extract_element_bool(i, j) {
+        } else if self.delta_minus.extract_element_bool(i, j).unwrap_or_default() {
             None
         } else {
             self.matrix.extract_element_bool(i, j)
