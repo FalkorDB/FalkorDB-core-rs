@@ -3,5 +3,5 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
-mod undo_log;
-mod undo_log_ffi;
+pub mod ffi;
+pub mod undo_log;

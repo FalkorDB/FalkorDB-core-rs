@@ -1,1 +1,2 @@
 target/
+src/binding/*_struct.rs
