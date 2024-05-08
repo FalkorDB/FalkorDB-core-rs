@@ -22,12 +22,11 @@ typedef struct _Schema Schema;
 typedef struct _SlowLog SlowLog;
 typedef struct _GraphEncodeContext GraphEncodeContext;
 typedef struct _GraphDecodeContext GraphDecodeContext;
-typedef struct _Delta_Matrix _Delta_Matrix;
 typedef struct _Cache Cache;
 typedef struct _RedisModuleString RedisModuleString;
 typedef struct _QueriesLog *QueriesLog;
 
-typedef _Delta_Matrix *Delta_Matrix;
+typedef struct _RG_Matrix *RG_Matrix;
 
 
 typedef double simple_timer_t[2];
@@ -59,26 +58,26 @@ typedef enum {
 typedef struct Graph Graph;
 
 // typedef for synchronization function pointer
-typedef void (*SyncMatrixFunc)(const Graph *, Delta_Matrix, GrB_Index, GrB_Index);
+typedef void (*SyncMatrixFunc)(const Graph *, RG_Matrix);
 
 typedef struct {
-    Delta_Matrix R;     // relation matrix
-    Delta_Matrix S;      // sources matrix
-    Delta_Matrix T;      // targets matrix
-} RelationMatrices;
+    uint64_t *node_count; // array of node count per label matrix
+    uint64_t *edge_count; // array of edge count per relationship matrix
+} GraphStatistics;
 
 struct Graph {
     int reserved_node_count;           // number of nodes not commited yet
     DataBlock *nodes;                  // graph nodes stored in blocks
     DataBlock *edges;                  // graph edges stored in blocks
-    Delta_Matrix adjacency_matrix;     // adjacency matrix, holds all graph connections
-    Delta_Matrix *labels;              // label matrices
-    Delta_Matrix node_labels;          // mapping of all node IDs to all labels possessed by each node
-    RelationMatrices *relations;       // relation matrices
-    Delta_Matrix _zero_matrix;         // zero matrix
+    RG_Matrix adjacency_matrix;        // adjacency matrix, holds all graph connections
+    RG_Matrix *labels;                 // label matrices
+    RG_Matrix node_labels;             // mapping of all node IDs to all labels possessed by each node
+    RG_Matrix *relations;              // relation matrices
+    RG_Matrix _zero_matrix;            // zero matrix
     pthread_rwlock_t _rwlock;          // read-write lock scoped to this specific graph
     bool _writelocked;                 // true if the read-write lock was acquired by a writer
     SyncMatrixFunc SynchronizeMatrix;  // function pointer to matrix synchronization routine
+    GraphStatistics stats;             // graph related statistics
 };
 
 // GraphContext holds refrences to various elements of a graph object

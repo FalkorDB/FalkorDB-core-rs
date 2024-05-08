@@ -9,8 +9,6 @@
 
 #include "common_struct_defs.h"
 
-extern pthread_key_t _tlsQueryCtxKey;  // Thread local storage query context key.
-
 // holds the execution type flags: certain traits of query regarding its
 // execution
 typedef enum QueryExecutionTypeFlag {

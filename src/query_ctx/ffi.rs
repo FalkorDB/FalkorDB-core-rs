@@ -1,26 +1,29 @@
 use crate::binding::query_ctx_struct::{
-    Graph, GraphContext, QueryCtx, _tlsQueryCtxKey, bolt_client_t, rax, EffectsBuffer,
-    RedisModuleCtx, ResultSet, UndoLog, AST,
+    bolt_client_t, pthread_key_t, rax, EffectsBuffer, Graph, GraphContext, QueryCtx,
+    QueryExecutionStatus, QueryExecutionTypeFlag, RedisModuleCtx, ResultSet, UndoLog, AST,
 };
 use crate::commands::command_ctx::CommandCtx;
+use std::ffi::c_char;
 use std::ptr::{addr_of_mut, null_mut};
+
+pub static mut _TLS_QUERY_CTX_KEY: pthread_key_t = 0;
 
 #[no_mangle]
 extern "C" fn QueryCtx_Init() -> bool {
-    unsafe { libc::pthread_key_create(addr_of_mut!(_tlsQueryCtxKey), None) == 0 }
+    unsafe { libc::pthread_key_create(addr_of_mut!(_TLS_QUERY_CTX_KEY), None) == 0 }
 }
 
 #[no_mangle]
 extern "C" fn QueryCtx_SetTLS(ctx: *mut QueryCtx) {
     unsafe {
-        libc::pthread_setspecific(_tlsQueryCtxKey, ctx as *mut _);
+        libc::pthread_setspecific(_TLS_QUERY_CTX_KEY, ctx as *mut _);
     }
 }
 
 #[no_mangle]
 extern "C" fn QueryCtx_RemoveFromTLS() {
     unsafe {
-        libc::pthread_setspecific(_tlsQueryCtxKey, null_mut());
+        libc::pthread_setspecific(_TLS_QUERY_CTX_KEY, null_mut());
     }
 }
 
@@ -31,7 +34,7 @@ extern "C" fn QueryCtx_Free() {
         assert!(!ctx.is_null());
 
         drop(Box::from_raw(ctx));
-        libc::pthread_setspecific(_tlsQueryCtxKey, null_mut());
+        libc::pthread_setspecific(_TLS_QUERY_CTX_KEY, null_mut());
     }
 }
 
@@ -42,7 +45,7 @@ extern "C" fn QueryCtx_GetQueryCtx() -> *mut QueryCtx {
 
 #[no_mangle]
 extern "C" fn QueryCtx_GetQueryCtx_unchecked() -> *mut QueryCtx {
-    unsafe { libc::pthread_getspecific(_tlsQueryCtxKey) as *mut _ }
+    unsafe { libc::pthread_getspecific(_TLS_QUERY_CTX_KEY) as *mut _ }
 }
 
 /// sets the global execution context
@@ -165,6 +168,23 @@ extern "C" fn QueryCtx_GetResultSet() -> *mut ResultSet {
     unsafe { (*ctx).get_result_set() }
 }
 
+#[no_mangle]
+extern "C" fn QueryCtx_SetQueryNoParams(query_no_params: *const c_char) {
+    assert!(!query_no_params.is_null());
+
+    let ctx = QueryCtx::get_or_create_context();
+    unsafe {
+        (*ctx).set_query_no_params(query_no_params);
+    }
+}
+
+#[no_mangle]
+extern "C" fn QueryCtx_GetQueryNoParams() -> *const c_char {
+    let ctx = QueryCtx_GetQueryCtx_unchecked();
+    assert!(!ctx.is_null());
+    unsafe { (*ctx).get_query_no_params() }
+}
+
 /// set the parameters map
 #[no_mangle]
 extern "C" fn QueryCtx_SetParams(rax: *mut rax) {
@@ -176,12 +196,44 @@ extern "C" fn QueryCtx_SetParams(rax: *mut rax) {
     }
 }
 
-/// set the parameters map
+/// retrieve the parameters map
 #[no_mangle]
 extern "C" fn QueryCtx_GetParams() -> *mut rax {
     let ctx = QueryCtx_GetQueryCtx_unchecked();
     assert!(!ctx.is_null());
     unsafe { (*ctx).get_params() }
+}
+
+#[no_mangle]
+extern "C" fn QueryCtx_SetStatus(status: QueryExecutionStatus) {
+    let ctx = QueryCtx_GetQueryCtx_unchecked();
+    assert!(!ctx.is_null());
+    unsafe {
+        (*ctx).set_status(status);
+    }
+}
+
+#[no_mangle]
+extern "C" fn QueryCtx_GetStatus() -> QueryExecutionStatus {
+    let ctx = QueryCtx_GetQueryCtx_unchecked();
+    assert!(!ctx.is_null());
+    unsafe { (*ctx).get_status() }
+}
+
+#[no_mangle]
+extern "C" fn QueryCtx_SetFlags(flags: QueryExecutionTypeFlag) {
+    let ctx = QueryCtx_GetQueryCtx_unchecked();
+    assert!(!ctx.is_null());
+    unsafe {
+        (*ctx).set_flags(flags);
+    }
+}
+
+#[no_mangle]
+extern "C" fn QueryCtx_HasFlags(flags: QueryExecutionTypeFlag) -> bool {
+    let ctx = QueryCtx_GetQueryCtx_unchecked();
+    assert!(!ctx.is_null());
+    unsafe { (*ctx).has_flags(flags) }
 }
 
 #[no_mangle]

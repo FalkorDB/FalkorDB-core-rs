@@ -1,13 +1,16 @@
 mod ffi;
+
 use crate::binding::query_ctx_struct::{
-    GraphContext, QueryCtx, QueryCtx_GlobalExecCtx, QueryCtx_InternalExecCtx, QueryCtx_QueryData,
-    QueryStats, ResultSet, _tlsQueryCtxKey, bolt_client_t, rax, EffectsBuffer, Graph,
-    QueryExecutionStatus_QueryExecutionStatus_TIMEDOUT,
+    bolt_client_t, rax, EffectsBuffer, Graph, GraphContext, QueryCtx, QueryCtx_GlobalExecCtx,
+    QueryCtx_InternalExecCtx, QueryCtx_QueryData, QueryExecutionStatus,
+    QueryExecutionStatus_QueryExecutionStatus_TIMEDOUT, QueryExecutionTypeFlag,
     QueryExecutionTypeFlag_QueryExecutionTypeFlag_WRITE, QueryStage_QueryStage_EXECUTING,
-    QueryStage_QueryStage_REPORTING, QueryStage_QueryStage_WAITING, RedisModuleCtx, AST,
+    QueryStage_QueryStage_REPORTING, QueryStage_QueryStage_WAITING, QueryStats, RedisModuleCtx,
+    ResultSet, AST,
 };
 use crate::commands::command_ctx::CommandCtx;
 use crate::errors::{ErrorCtx_RaiseRuntimeException, ErrorCtx_SetError};
+use crate::query_ctx::ffi::_TLS_QUERY_CTX_KEY;
 use crate::undo_log::{undo_log::UndoLog, undo_log_ffi::UndoLog_Rollback};
 use std::ffi::{c_char, c_void, CStr};
 use std::ptr::{null, null_mut};
@@ -116,11 +119,53 @@ impl QueryCtx {
     }
 
     #[inline]
+    pub fn set_query_no_params(
+        &mut self,
+        query_no_params: *const c_char,
+    ) {
+        self.query_data.query_no_params = query_no_params;
+    }
+
+    #[inline]
+    pub fn get_query_no_params(&mut self) -> *const c_char {
+        self.query_data.query_no_params
+    }
+
+    #[inline]
     pub fn set_params(
         &mut self,
         rax: *mut rax,
     ) {
         self.query_data.params = rax;
+    }
+
+    #[inline]
+    pub fn set_status(
+        &mut self,
+        status: QueryExecutionStatus,
+    ) {
+        self.status = status;
+    }
+
+    #[inline]
+    pub fn get_status(&mut self) -> QueryExecutionStatus {
+        self.status
+    }
+
+    #[inline]
+    pub fn set_flags(
+        &mut self,
+        flags: QueryExecutionTypeFlag,
+    ) {
+        self.flags = flags;
+    }
+
+    #[inline]
+    pub fn has_flags(
+        &mut self,
+        flags: QueryExecutionTypeFlag,
+    ) -> bool {
+        (self.flags & flags) != 0
     }
 
     #[inline]
@@ -374,11 +419,11 @@ impl QueryCtx {
     // retrieve or instantiate new QueryCtx
     fn get_or_create_context() -> *mut QueryCtx {
         unsafe {
-            let mut ctx: *mut QueryCtx = libc::pthread_getspecific(_tlsQueryCtxKey) as *mut _;
+            let mut ctx: *mut QueryCtx = libc::pthread_getspecific(_TLS_QUERY_CTX_KEY) as *mut _;
             if ctx.is_null() {
                 ctx = Box::into_raw(Box::new(QueryCtx::new()));
 
-                libc::pthread_setspecific(_tlsQueryCtxKey, ctx as *mut _);
+                libc::pthread_setspecific(_TLS_QUERY_CTX_KEY, ctx as *mut _);
             }
 
             ctx
@@ -406,7 +451,7 @@ impl Drop for QueryCtx {
         }
 
         unsafe {
-            libc::pthread_setspecific(_tlsQueryCtxKey, null_mut());
+            libc::pthread_setspecific(_TLS_QUERY_CTX_KEY, null_mut());
         }
     }
 }
