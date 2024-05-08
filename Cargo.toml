@@ -10,4 +10,9 @@ crate-type = ["staticlib", "rlib"]
 falkordb_allocator = []
 
 [dependencies]
+const_format = { version = "0.2.32", default-features = false }
 libc = "0.2.153"
+redis-module = "2.0.7"
+
+[build-dependencies]
+bindgen = "0.69.4"

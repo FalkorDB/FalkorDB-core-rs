@@ -12,11 +12,6 @@ use super::undo_log::*;
 type _UndoLog = *mut UndoLog;
 
 #[no_mangle]
-unsafe extern "C" fn UndoLog_New() -> _UndoLog {
-    Box::into_raw(Box::new(UndoLog::new()))
-}
-
-#[no_mangle]
 unsafe extern "C" fn UndoLog_CreateNode(
     log: _UndoLog,
     node: *const Node,
@@ -131,7 +126,7 @@ unsafe extern "C" fn UndoLog_CreateIndex(
 }
 
 #[no_mangle]
-unsafe extern "C" fn UndoLog_Rollback(
+pub unsafe extern "C" fn UndoLog_Rollback(
     log: _UndoLog,
     gc: *mut GraphContext,
 ) {

@@ -7,12 +7,16 @@ use std::alloc::{GlobalAlloc, Layout};
 use std::os::raw::c_void;
 
 mod binding;
+mod commands;
+mod errors;
 mod graph;
-mod undo_log;
+mod query_ctx;
+pub mod undo_log;
 
 extern "C" {
     static RedisModule_Alloc: Option<extern "C" fn(usize) -> *mut c_void>;
     static RedisModule_Free: Option<extern "C" fn(*mut c_void)>;
+    static GraphContextRedisModuleType: *mut redis_module::RedisModuleType;
 }
 
 pub struct FalkorDBAlloc;
