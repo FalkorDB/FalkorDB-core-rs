@@ -135,7 +135,7 @@ unsafe extern "C" fn UndoLog_CreateIndex(
 }
 
 #[no_mangle]
-unsafe extern "C" fn UndoLog_Rollback(
+pub unsafe extern "C" fn UndoLog_Rollback(
     log: _UndoLog,
     gc: *mut GraphContext,
 ) {

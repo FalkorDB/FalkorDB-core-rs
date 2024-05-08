@@ -8,6 +8,7 @@ use std::os::raw::c_void;
 
 mod binding;
 mod commands;
+mod errors;
 mod query_ctx;
 pub mod undo_log;
 

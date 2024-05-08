@@ -8,8 +8,7 @@ use crate::binding::query_ctx_struct::{
 };
 use crate::commands::command_ctx::CommandCtx;
 use crate::errors::{ErrorCtx_RaiseRuntimeException, ErrorCtx_SetError};
-use crate::undo_log::ffi::UndoLog_Rollback;
-use crate::undo_log::undo_log::UndoLog;
+use crate::undo_log::{undo_log::UndoLog, undo_log_ffi::UndoLog_Rollback};
 use std::ffi::{c_char, c_void, CStr};
 use std::ptr::{null, null_mut};
 
