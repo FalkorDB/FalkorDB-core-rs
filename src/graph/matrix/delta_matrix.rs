@@ -54,7 +54,7 @@ impl Drop for CMutex {
 }
 
 pub struct DeltaMatrix {
-    dirty: bool, // TODO: volatile
+    dirty: bool,
     matrix: SparseMatrix,
     delta_plus: SparseMatrix,
     delta_minus: SparseMatrix,
@@ -73,13 +73,13 @@ impl DeltaMatrix {
             let mut x = Self {
                 dirty: false,
                 matrix: SparseMatrix::new(ty, nrows, ncols),
-                delta_plus: SparseMatrix::new(GrB_BOOL, nrows, ncols),
+                delta_plus: SparseMatrix::new(ty, nrows, ncols),
                 delta_minus: SparseMatrix::new(GrB_BOOL, nrows, ncols),
                 transposed: if transpose {
                     let mut x = Box::new(Self {
                         dirty: false,
                         matrix: SparseMatrix::new(ty, ncols, nrows),
-                        delta_plus: SparseMatrix::new(GrB_BOOL, ncols, nrows),
+                        delta_plus: SparseMatrix::new(ty, ncols, nrows),
                         delta_minus: SparseMatrix::new(GrB_BOOL, ncols, nrows),
                         transposed: None,
                         mutex: None,
@@ -108,7 +108,7 @@ impl DeltaMatrix {
         self.transposed.as_mut()
     }
 
-    pub fn dirty(&self) -> bool {
+    fn dirty(&self) -> bool {
         self.dirty
     }
 
@@ -159,17 +159,17 @@ impl DeltaMatrix {
         self.delta_minus.resize(nrows_new, ncols_new);
     }
 
-    pub fn remove_element_bool(
+    pub fn remove_element(
         &mut self,
         i: u64,
         j: u64,
     ) {
         if let Some(t) = self.transposed.as_mut() {
-            t.remove_element_bool(j, i);
+            t.remove_element(j, i);
         }
 
-        if self.matrix.extract_element_bool(i, j).unwrap_or_default() {
-            self.delta_minus.set_element_bool(i, j, true);
+        if self.matrix.extract_element_bool(i, j).is_some() {
+            self.delta_minus.set_element_bool(true, i, j);
         } else {
             self.delta_plus.remove_element(i, j);
         }
@@ -185,15 +185,31 @@ impl DeltaMatrix {
             t.set_element_bool(j, i);
         }
 
-        if self
-            .delta_minus
-            .extract_element_bool(i, j)
-            .unwrap_or_default()
-        {
+        if self.delta_minus.extract_element_bool(i, j).is_some() {
             self.delta_minus.remove_element(i, j);
             self.set_dirty(true);
         } else if self.matrix.extract_element_bool(i, j).is_none() {
-            self.delta_plus.set_element_bool(i, j, true);
+            self.delta_plus.set_element_bool(true, i, j);
+            self.set_dirty(true);
+        }
+    }
+
+    pub fn set_element_u64(
+        &mut self,
+        x: u64,
+        i: u64,
+        j: u64,
+    ) {
+        if let Some(t) = self.transposed.as_mut() {
+            t.set_element_u64(x, j, i);
+        }
+
+        if self.delta_minus.extract_element_bool(i, j).is_some() {
+            self.delta_minus.remove_element(i, j);
+            self.matrix.set_element_u64(x, i, j);
+            self.set_dirty(true);
+        } else if self.matrix.extract_element_bool(i, j).is_none() {
+            self.delta_plus.set_element_u64(x, i, j);
             self.set_dirty(true);
         }
     }
@@ -203,20 +219,26 @@ impl DeltaMatrix {
         i: u64,
         j: u64,
     ) -> Option<bool> {
-        if self
-            .delta_plus
-            .extract_element_bool(i, j)
-            .unwrap_or_default()
-        {
+        if self.delta_plus.extract_element_bool(i, j).is_some() {
             Some(true)
-        } else if self
-            .delta_minus
-            .extract_element_bool(i, j)
-            .unwrap_or_default()
-        {
+        } else if self.delta_minus.extract_element_bool(i, j).is_some() {
             None
         } else {
             self.matrix.extract_element_bool(i, j)
+        }
+    }
+
+    pub fn extract_element_u64(
+        &self,
+        i: u64,
+        j: u64,
+    ) -> Option<u64> {
+        if let Some(v) = self.delta_plus.extract_element_u64(i, j) {
+            Some(v)
+        } else if self.delta_minus.extract_element_bool(i, j).is_some() {
+            None
+        } else {
+            self.matrix.extract_element_u64(i, j)
         }
     }
 

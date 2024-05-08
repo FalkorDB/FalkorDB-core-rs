@@ -35,11 +35,6 @@ unsafe extern "C" fn Delta_Matrix_getTranspose(c: _Matrix) -> _Matrix {
 }
 
 #[no_mangle]
-unsafe extern "C" fn Delta_Matrix_isDirty(c: _Matrix) -> bool {
-    (&*c).dirty()
-}
-
-#[no_mangle]
 unsafe extern "C" fn Delta_Matrix_M(c: _Matrix) -> GrB_Matrix {
     (&*c).m().grb_matrix_ref()
 }
@@ -102,6 +97,17 @@ unsafe extern "C" fn Delta_Matrix_setElement_BOOL(
 }
 
 #[no_mangle]
+unsafe extern "C" fn Delta_Matrix_setElement_UINT64(
+    c: _Matrix,
+    x: u64,
+    i: GrB_Index,
+    j: GrB_Index,
+) -> GrB_Info {
+    (*c).set_element_u64(x, i, j);
+    GrB_Info::GrB_SUCCESS
+}
+
+#[no_mangle]
 unsafe extern "C" fn Delta_Matrix_extractElement_BOOL(
     x: *mut bool,
     c: _Matrix,
@@ -109,6 +115,23 @@ unsafe extern "C" fn Delta_Matrix_extractElement_BOOL(
     j: GrB_Index,
 ) -> GrB_Info {
     if let Some(v) = (&*c).extract_element_bool(i, j) {
+        if !x.is_null() {
+            *x = v;
+        }
+        GrB_Info::GrB_SUCCESS
+    } else {
+        GrB_Info::GrB_NO_VALUE
+    }
+}
+
+#[no_mangle]
+unsafe extern "C" fn Delta_Matrix_extractElement_UINT64(
+    x: *mut u64,
+    c: _Matrix,
+    i: GrB_Index,
+    j: GrB_Index,
+) -> GrB_Info {
+    if let Some(v) = (&*c).extract_element_u64(i, j) {
         if !x.is_null() {
             *x = v;
         }
@@ -129,12 +152,12 @@ unsafe extern "C" fn Delta_Matrix_extract_row(
 }
 
 #[no_mangle]
-unsafe extern "C" fn Delta_Matrix_removeElement_BOOL(
+unsafe extern "C" fn Delta_Matrix_removeElement(
     c: _Matrix,
     i: GrB_Index,
     j: GrB_Index,
 ) -> GrB_Info {
-    (*c).remove_element_bool(i, j);
+    (*c).remove_element(i, j);
     GrB_Info::GrB_SUCCESS
 }
 
@@ -287,6 +310,31 @@ unsafe extern "C" fn Delta_MatrixTupleIter_next_BOOL(
     val: *mut bool,
 ) -> GrB_Info {
     match (*iter).next_bool() {
+        Ok(Some((r, c, v))) => {
+            if !row.is_null() {
+                *row = r;
+            }
+            if !col.is_null() {
+                *col = c;
+            }
+            if !val.is_null() {
+                *val = v;
+            }
+            GrB_Info::GrB_SUCCESS
+        }
+        Ok(None) => GrB_Info::GxB_EXHAUSTED,
+        _ => GrB_Info::GrB_NULL_POINTER,
+    }
+}
+
+#[no_mangle]
+unsafe extern "C" fn Delta_MatrixTupleIter_next_UINT64(
+    iter: _MatrixTupleIter,
+    row: *mut GrB_Index,
+    col: *mut GrB_Index,
+    val: *mut u64,
+) -> GrB_Info {
+    match (*iter).next_u64() {
         Ok(Some((r, c, v))) => {
             if !row.is_null() {
                 *row = r;

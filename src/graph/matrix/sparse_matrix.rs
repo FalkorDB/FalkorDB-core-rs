@@ -8,15 +8,15 @@ use std::{mem::MaybeUninit, ptr::null_mut};
 use crate::graph::matrix::GraphBLAS::{
     GrB_Col_extract, GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Matrix_apply, GrB_Matrix_assign_Scalar,
     GrB_Matrix_clear, GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free, GrB_Matrix_removeElement,
-    GrB_Matrix_setElement_BOOL, GrB_WaitMode, GrB_mxm, GxB_ALWAYS_HYPER, GxB_Matrix_Option_set,
-    GxB_Option_Field,
+    GrB_Matrix_setElement_BOOL, GrB_Matrix_setElement_UINT64, GrB_WaitMode, GrB_mxm,
+    GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field,
 };
 
 use super::GraphBLAS::{
     GrB_ALL, GrB_BinaryOp, GrB_Descriptor, GrB_Index, GrB_Info, GrB_Matrix, GrB_Matrix_assign,
-    GrB_Matrix_extractElement_BOOL, GrB_Matrix_ncols, GrB_Matrix_new, GrB_Matrix_nrows,
-    GrB_Matrix_nvals, GrB_Matrix_resize, GrB_Matrix_wait, GrB_Scalar, GrB_Semiring, GrB_Type,
-    GrB_Vector, GrB_transpose, GxB_Matrix_Pending,
+    GrB_Matrix_extractElement_BOOL, GrB_Matrix_extractElement_UINT64, GrB_Matrix_ncols,
+    GrB_Matrix_new, GrB_Matrix_nrows, GrB_Matrix_nvals, GrB_Matrix_resize, GrB_Matrix_wait,
+    GrB_Scalar, GrB_Semiring, GrB_Type, GrB_Vector, GrB_transpose, GxB_Matrix_Pending,
 };
 
 #[macro_export]
@@ -167,14 +167,48 @@ impl SparseMatrix {
         }
     }
 
-    pub fn set_element_bool(
-        &mut self,
+    pub fn extract_element_u64(
+        &self,
         i: u64,
         j: u64,
+    ) -> Option<u64> {
+        unsafe {
+            let mut x = MaybeUninit::uninit();
+            let info = GrB_Matrix_extractElement_UINT64(x.as_mut_ptr(), self.0, i, j);
+            if info == GrB_Info::GrB_SUCCESS {
+                Some(x.assume_init())
+            } else if info == GrB_Info::GrB_NO_VALUE {
+                None
+            } else {
+                debug_assert!(
+                    false,
+                    "GrB_Matrix_extractElement_UINT64 failed with error code: {:?}",
+                    info
+                );
+                None
+            }
+        }
+    }
+
+    pub fn set_element_bool(
+        &mut self,
         x: bool,
+        i: u64,
+        j: u64,
     ) {
         unsafe {
             grb_check!(GrB_Matrix_setElement_BOOL(self.0, x, i, j));
+        }
+    }
+
+    pub fn set_element_u64(
+        &mut self,
+        x: u64,
+        i: u64,
+        j: u64,
+    ) {
+        unsafe {
+            grb_check!(GrB_Matrix_setElement_UINT64(self.0, x, i, j));
         }
     }
 

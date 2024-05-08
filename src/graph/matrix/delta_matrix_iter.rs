@@ -72,11 +72,21 @@ impl<'a> DeltaMatrixIter<'a> {
             }
         }
 
-        if let Some((i, j, v)) = self.dp_it.next_bool(self.max_row) {
-            return Ok(Some((i, j, v)));
+        Ok(self.dp_it.next_bool(self.max_row))
+    }
+
+    pub fn next_u64(&mut self) -> Result<Option<(u64, u64, u64)>, ()> {
+        if self.matrix.is_none() {
+            return Err(());
         }
 
-        Ok(None)
+        while let Some((i, j, v)) = self.m_it.next_u64(self.max_row) {
+            if self.matrix.unwrap().dm().extract_element_bool(i, j).is_none() {
+                return Ok(Some((i, j, v)));
+            }
+        }
+
+        Ok(self.dp_it.next_u64(self.max_row))
     }
 
     pub fn reset(&mut self) {

@@ -10,9 +10,9 @@ use crate::grb_check;
 use super::{
     sparse_matrix::SparseMatrix,
     GraphBLAS::{
-        GB_Iterator_opaque, GrB_Info, GxB_Iterator_get_BOOL, GxB_rowIterator_attach,
-        GxB_rowIterator_getColIndex, GxB_rowIterator_getRowIndex, GxB_rowIterator_nextCol,
-        GxB_rowIterator_nextRow, GxB_rowIterator_seekRow,
+        GB_Iterator_opaque, GrB_Info, GxB_Iterator_get_BOOL, GxB_Iterator_get_UINT64,
+        GxB_rowIterator_attach, GxB_rowIterator_getColIndex, GxB_rowIterator_getRowIndex,
+        GxB_rowIterator_nextCol, GxB_rowIterator_nextRow, GxB_rowIterator_seekRow,
     },
 };
 
@@ -83,6 +83,37 @@ impl SparseMatrixIter {
             let row = GxB_rowIterator_getRowIndex(&mut self.it);
             let col = GxB_rowIterator_getColIndex(&mut self.it);
             let val = GxB_Iterator_get_BOOL(&mut self.it);
+
+            let mut info = GxB_rowIterator_nextCol(&mut self.it);
+            if info != GrB_Info::GrB_SUCCESS {
+                info = GxB_rowIterator_nextRow(&mut self.it);
+
+                while info == GrB_Info::GrB_NO_VALUE
+                    && GxB_rowIterator_getRowIndex(&mut self.it) < max_row
+                {
+                    info = GxB_rowIterator_nextRow(&mut self.it);
+                }
+
+                self.depleted = info != GrB_Info::GrB_SUCCESS
+                    || GxB_rowIterator_getRowIndex(&mut self.it) > max_row;
+            }
+
+            Some((row, col, val))
+        }
+    }
+
+    pub fn next_u64(
+        &mut self,
+        max_row: u64,
+    ) -> Option<(u64, u64, u64)> {
+        unsafe {
+            if self.depleted {
+                return None;
+            }
+
+            let row = GxB_rowIterator_getRowIndex(&mut self.it);
+            let col = GxB_rowIterator_getColIndex(&mut self.it);
+            let val = GxB_Iterator_get_UINT64(&mut self.it);
 
             let mut info = GxB_rowIterator_nextCol(&mut self.it);
             if info != GrB_Info::GrB_SUCCESS {
