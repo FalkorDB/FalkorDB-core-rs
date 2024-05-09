@@ -5,4 +5,5 @@
 
 pub mod graph;
 #[allow(warnings)]
+#[rustfmt::skip]
 pub mod query_ctx_struct;
