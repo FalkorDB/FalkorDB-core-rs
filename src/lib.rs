@@ -7,7 +7,6 @@ use std::alloc::{GlobalAlloc, Layout};
 use std::os::raw::c_void;
 
 mod attribute_set;
-mod commands;
 mod graph;
 mod graph_context;
 mod graph_entity;
