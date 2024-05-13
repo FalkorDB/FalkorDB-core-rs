@@ -3,38 +3,40 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
+use super::UndoLog;
+use crate::attribute_set::AttributeSet;
+use crate::graph_context::GraphContext;
+use crate::graph_entity::edge::Edge;
+use crate::graph_entity::node::Node;
+use crate::index::IndexFieldType;
+use crate::schema::SchemaType;
+use crate::types::{AttributeID, LabelID};
 use std::{ffi::c_char, slice::from_raw_parts};
 
-use crate::binding::graph::*;
-
-use super::undo_log::*;
-
-type _UndoLog = *mut UndoLog;
-
 #[no_mangle]
-unsafe extern "C" fn UndoLog_New() -> _UndoLog {
+unsafe extern "C" fn UndoLog_New() -> *mut UndoLog {
     Box::into_raw(Box::new(UndoLog::new()))
 }
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_CreateNode(
-    log: _UndoLog,
+    log: *mut UndoLog,
     node: *const Node,
 ) {
-    log.as_mut().unwrap().create_node(node.read());
+    (*log).create_node(node.read());
 }
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_CreateEdge(
-    log: _UndoLog,
+    log: *mut UndoLog,
     edge: *const Edge,
 ) {
-    log.as_mut().unwrap().create_edge(edge.read());
+    (*log).create_edge(edge.read());
 }
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_DeleteNode(
-    log: _UndoLog,
+    log: *mut UndoLog,
     node: *const Node,
     labels: *const LabelID,
     labels_count: usize,
@@ -50,7 +52,7 @@ unsafe extern "C" fn UndoLog_DeleteNode(
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_DeleteEdge(
-    log: _UndoLog,
+    log: *mut UndoLog,
     edge: *const Edge,
 ) {
     let e = edge.read();
@@ -64,30 +66,30 @@ unsafe extern "C" fn UndoLog_DeleteEdge(
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_UpdateNode(
-    log: _UndoLog,
+    log: *mut UndoLog,
     node: *const Node,
     old_set: AttributeSet,
 ) {
-    log.as_mut().unwrap().update_node(node.read(), old_set);
+    (*log).update_node(node.read(), old_set);
 }
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_UpdateEdge(
-    log: _UndoLog,
+    log: *mut UndoLog,
     edge: *const Edge,
     old_set: AttributeSet,
 ) {
-    log.as_mut().unwrap().update_edge(edge.read(), old_set);
+    (*log).update_edge(edge.read(), old_set);
 }
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_AddLabels(
-    log: _UndoLog,
+    log: *mut UndoLog,
     node: *const Node,
     label_ids: *const LabelID,
     labels_count: usize,
 ) {
-    log.as_mut().unwrap().add_labels(
+    (*log).add_labels(
         node.read(),
         from_raw_parts(label_ids, labels_count).to_vec(),
     );
@@ -95,12 +97,12 @@ unsafe extern "C" fn UndoLog_AddLabels(
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_RemoveLabels(
-    log: _UndoLog,
+    log: *mut UndoLog,
     node: *const Node,
     label_ids: *const LabelID,
     labels_count: usize,
 ) {
-    log.as_mut().unwrap().remove_labels(
+    (*log).remove_labels(
         node.read(),
         from_raw_parts(label_ids, labels_count).to_vec(),
     );
@@ -108,44 +110,42 @@ unsafe extern "C" fn UndoLog_RemoveLabels(
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_AddSchema(
-    log: _UndoLog,
+    log: *mut UndoLog,
     schema_id: i32,
     t: SchemaType,
 ) {
-    log.as_mut().unwrap().add_schema(schema_id, t);
+    (*log).add_schema(schema_id, t);
 }
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_AddAttribute(
-    log: _UndoLog,
+    log: *mut UndoLog,
     attribute_id: AttributeID,
 ) {
-    log.as_mut().unwrap().add_attribute(attribute_id);
+    (*log).add_attribute(attribute_id);
 }
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_CreateIndex(
-    log: _UndoLog,
+    log: *mut UndoLog,
     st: SchemaType,
     label: *const c_char,
     field: *const c_char,
     t: IndexFieldType,
 ) {
-    log.as_mut().unwrap().create_index(st, label, field, t);
+    (*log).create_index(st, label, field, t);
 }
 
 #[no_mangle]
 unsafe extern "C" fn UndoLog_Rollback(
-    log: _UndoLog,
+    log: *mut UndoLog,
     gc: *mut GraphContext,
 ) {
-    log.as_mut()
-        .unwrap()
-        .rollback(&mut GraphContextAPI { context: gc });
+    (*log).rollback(&mut (*gc));
     drop(Box::from_raw(log));
 }
 
 #[no_mangle]
-unsafe extern "C" fn UndoLog_Free(log: _UndoLog) {
+unsafe extern "C" fn UndoLog_Free(log: *mut UndoLog) {
     drop(Box::from_raw(log));
 }

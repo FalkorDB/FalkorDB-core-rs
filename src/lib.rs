@@ -6,7 +6,14 @@
 use std::alloc::{GlobalAlloc, Layout};
 use std::os::raw::c_void;
 
-mod binding;
+mod attribute_set;
+mod commands;
+mod graph;
+mod graph_context;
+mod graph_entity;
+mod index;
+mod schema;
+mod types;
 mod undo_log;
 
 extern "C" {
