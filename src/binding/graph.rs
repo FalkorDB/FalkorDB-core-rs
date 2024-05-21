@@ -180,6 +180,11 @@ extern "C" {
         field: ConfigOptionField,
         ...
     ) -> bool;
+    pub fn Config_Option_set(
+        field: ConfigOptionField,
+        val: *const c_char,
+        err: *mut *mut c_char,
+    ) -> bool;
 }
 
 pub struct GraphAPI {

@@ -510,7 +510,16 @@ impl DeltaMatrix {
 
 #[cfg(test)]
 mod tests {
-    use crate::graph::matrix::GraphBLAS::{GrB_BOOL, GrB_Mode, GrB_init};
+    use std::ptr::null_mut;
+
+    use libc::c_char;
+
+    use crate::{
+        binding::graph::{ConfigOptionField, Config_Option_set},
+        graph::matrix::GraphBLAS::{
+            GrB_BOOL, GrB_Mode, GrB_init, GxB_Format_Value, GxB_Global_Option_set, GxB_Option_Field,
+        },
+    };
 
     use super::DeltaMatrix;
 
@@ -546,5 +555,66 @@ mod tests {
         assert_eq!(a.transposed().unwrap().nvals(), 0);
         assert!(!a.transposed().unwrap().dirty());
         assert!(a.transposed().unwrap().transposed().is_none());
+    }
+
+    #[test]
+    fn test_simple_set() {
+        unsafe {
+            GrB_init(GrB_Mode::GrB_NONBLOCKING);
+            GxB_Global_Option_set(GxB_Option_Field::GxB_FORMAT, GxB_Format_Value::GxB_BY_ROW);
+            Config_Option_set(
+                ConfigOptionField::DELTA_MAX_PENDING_CHANGES,
+                "10000\0".as_ptr() as *const c_char,
+                null_mut(),
+            );
+        };
+        let nrows = 100;
+        let ncols = 100;
+        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
+
+        let i = 0;
+        let j = 1;
+        a.set_element_bool(i, j);
+
+        assert_eq!(a.extract_element_bool(i, j), Some(true));
+        assert_eq!(a.nvals(), 1);
+        assert!(a.dirty());
+        assert_eq!(a.m().nvals(), 0);
+        assert_eq!(a.dm().nvals(), 0);
+        assert_eq!(a.dp().nvals(), 1);
+
+        a.wait(false);
+
+        a.set_element_bool(i, j);
+
+        assert_eq!(a.m().nvals(), 0);
+        assert_eq!(a.dm().nvals(), 0);
+        assert_eq!(a.dp().nvals(), 1);
+    }
+
+    #[test]
+    fn test_set() {
+        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+        let nrows = 100;
+        let ncols = 100;
+        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
+
+        let i = 0;
+        let j = 1;
+        a.set_element_bool(i, j);
+
+        a.wait(true);
+
+        a.remove_element(i, j);
+
+        a.set_element_bool(i, j);
+
+        assert_eq!(a.nvals(), 1);
+        assert_eq!(a.delta_minus.nvals(), 0);
+        assert_eq!(a.delta_plus.nvals(), 0);
+    }
+
+    #[test]
+    fn test_del() {
     }
 }
