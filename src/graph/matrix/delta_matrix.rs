@@ -508,9 +508,6 @@ impl DeltaMatrix {
     }
 }
 
-// to run tests:
-// export RUSTFLAGS='-L /opt/homebrew/opt/libomp/lib -lgraphblas -lomp'
-// cargo test
 #[cfg(test)]
 mod tests {
     use crate::graph::matrix::GraphBLAS::{GrB_BOOL, GrB_Mode, GrB_init};
