@@ -76,7 +76,7 @@ impl DeltaMatrix {
                 delta_plus: SparseMatrix::new(ty, nrows, ncols),
                 delta_minus: SparseMatrix::new(GrB_BOOL, nrows, ncols),
                 transposed: if transpose {
-                    let mut x = Box::new(Self {
+                    let mut t = Box::new(Self {
                         dirty: false,
                         matrix: SparseMatrix::new(ty, ncols, nrows),
                         delta_plus: SparseMatrix::new(ty, ncols, nrows),
@@ -84,12 +84,12 @@ impl DeltaMatrix {
                         transposed: None,
                         mutex: None,
                     });
-                    x.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
-                    x.delta_plus.set_sparsity(GxB_HYPERSPARSE);
-                    x.delta_plus.set_always_hyper();
-                    x.delta_minus.set_sparsity(GxB_HYPERSPARSE);
-                    x.delta_minus.set_always_hyper();
-                    Some(x)
+                    t.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
+                    t.delta_plus.set_sparsity(GxB_HYPERSPARSE);
+                    t.delta_plus.set_always_hyper();
+                    t.delta_minus.set_sparsity(GxB_HYPERSPARSE);
+                    t.delta_minus.set_always_hyper();
+                    Some(t)
                 } else {
                     None
                 },
@@ -106,10 +106,6 @@ impl DeltaMatrix {
 
     pub fn transposed(&mut self) -> Option<&mut Box<DeltaMatrix>> {
         self.transposed.as_mut()
-    }
-
-    fn dirty(&self) -> bool {
-        self.dirty
     }
 
     fn set_dirty(
@@ -208,7 +204,7 @@ impl DeltaMatrix {
             self.delta_minus.remove_element(i, j);
             self.matrix.set_element_u64(x, i, j);
             self.set_dirty(true);
-        } else if self.matrix.extract_element_bool(i, j).is_none() {
+        } else if self.matrix.extract_element_u64(i, j).is_none() {
             self.delta_plus.set_element_u64(x, i, j);
             self.set_dirty(true);
         }
@@ -244,8 +240,10 @@ impl DeltaMatrix {
 
     pub fn remove_elements(
         &mut self,
-        mask: GrB_Matrix,
+        mask: &SparseMatrix,
     ) {
+        debug_assert!(self.transposed.is_none());
+
         unsafe {
             let mut s = MaybeUninit::uninit();
             GrB_Scalar_new(s.as_mut_ptr(), GrB_BOOL);
@@ -260,7 +258,7 @@ impl DeltaMatrix {
             );
             self.delta_minus.assign(
                 mask,
-                self.matrix.grb_matrix_ref(),
+                &self.matrix,
                 GrB_ALL,
                 self.nrows(),
                 GrB_ALL,
@@ -273,10 +271,12 @@ impl DeltaMatrix {
     }
 
     pub fn clear(&mut self) {
+        debug_assert!(self.transposed.is_none());
+
         self.matrix.clear();
         self.delta_plus.clear();
         self.delta_minus.clear();
-        self.set_dirty(false);
+        self.set_dirty(true);
     }
 
     pub fn copy(
@@ -454,8 +454,8 @@ impl DeltaMatrix {
     fn sync_additions(&mut self) {
         unsafe {
             self.matrix.assign(
-                self.delta_plus.grb_matrix_ref(),
-                self.delta_plus.grb_matrix_ref(),
+                &self.delta_plus,
+                &self.delta_plus,
                 GrB_ALL,
                 self.nrows(),
                 GrB_ALL,
@@ -477,10 +477,11 @@ impl DeltaMatrix {
             let mask = vmask.assume_init();
 
             self.delta_minus
-                .extract(mask, null_mut(), null_mut(), i, GrB_DESC_T0);
-            self.matrix.extract(v, mask, null_mut(), i, GrB_DESC_SCT0);
+                .extract_col(mask, null_mut(), null_mut(), i, GrB_DESC_T0);
+            self.matrix
+                .extract_col(v, mask, null_mut(), i, GrB_DESC_SCT0);
             self.delta_plus
-                .extract(v, mask, GxB_LOR_BOOL, i, GrB_DESC_SCT0);
+                .extract_col(v, mask, GxB_LOR_BOOL, i, GrB_DESC_SCT0);
             GrB_Vector_free(vmask.as_mut_ptr());
         }
     }
@@ -490,7 +491,7 @@ impl DeltaMatrix {
         nrows: u64,
         ncols: u64,
     ) {
-        if !(self.nrows() < nrows || self.ncols() < ncols || self.dirty()) {
+        if !(self.nrows() < nrows || self.ncols() < ncols || self.dirty) {
             return;
         }
 
@@ -500,7 +501,7 @@ impl DeltaMatrix {
             self.resize(nrows, ncols);
         }
 
-        if self.dirty() {
+        if self.dirty {
             self.wait(false);
         }
 
@@ -535,7 +536,7 @@ mod tests {
         assert_eq!(a.nrows(), nrows);
         assert_eq!(a.ncols(), ncols);
         assert_eq!(a.nvals(), 0);
-        assert!(!a.dirty());
+        assert!(!a.dirty);
         assert!(a.transposed().is_none());
 
         let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
@@ -545,7 +546,7 @@ mod tests {
         assert_eq!(a.nrows(), nrows);
         assert_eq!(a.ncols(), ncols);
         assert_eq!(a.nvals(), 0);
-        assert!(!a.dirty());
+        assert!(!a.dirty);
         assert!(a.transposed().is_some());
         assert_eq!(a.transposed().unwrap().m().nvals(), 0);
         assert_eq!(a.transposed().unwrap().dp().nvals(), 0);
@@ -553,7 +554,7 @@ mod tests {
         assert_eq!(a.transposed().unwrap().nrows(), ncols);
         assert_eq!(a.transposed().unwrap().ncols(), nrows);
         assert_eq!(a.transposed().unwrap().nvals(), 0);
-        assert!(!a.transposed().unwrap().dirty());
+        assert!(!a.transposed().unwrap().dirty);
         assert!(a.transposed().unwrap().transposed().is_none());
     }
 
@@ -578,7 +579,7 @@ mod tests {
 
         assert_eq!(a.extract_element_bool(i, j), Some(true));
         assert_eq!(a.nvals(), 1);
-        assert!(a.dirty());
+        assert!(a.dirty);
         assert_eq!(a.m().nvals(), 0);
         assert_eq!(a.dm().nvals(), 0);
         assert_eq!(a.dp().nvals(), 1);
@@ -633,7 +634,7 @@ mod tests {
         a.set_element_bool(i, j);
         a.remove_element(i, j);
 
-        assert!(a.dirty());
+        assert!(a.dirty);
         assert_eq!(a.nvals(), 0);
         assert_eq!(a.matrix.nvals(), 0);
         assert_eq!(a.delta_minus.nvals(), 0);
@@ -666,22 +667,23 @@ mod tests {
         assert_eq!(a.delta_plus.nvals(), 0);
     }
 
+    #[test]
     fn test_transpose() {
         unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
         let nrows = 100;
         let ncols = 100;
         let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
-        
+
         let i = 0;
         let j = 1;
-        
+
         a.set_element_bool(i, j);
 
         let t = a.transposed.as_ref().unwrap();
 
         assert_eq!(t.extract_element_bool(j, i), Some(true));
         assert_eq!(t.nvals(), 1);
-        assert!(t.dirty());
+        assert!(t.dirty);
         assert_eq!(t.m().nvals(), 0);
         assert_eq!(t.dm().nvals(), 0);
         assert_eq!(t.dp().nvals(), 1);
@@ -698,7 +700,7 @@ mod tests {
 
         let t = a.transposed.as_ref().unwrap();
 
-        assert!(t.dirty());
+        assert!(t.dirty);
         assert_eq!(t.m().nvals(), 1);
         assert_eq!(t.dm().nvals(), 1);
         assert_eq!(t.dp().nvals(), 0);

@@ -166,7 +166,9 @@ unsafe extern "C" fn Delta_Matrix_removeElements(
     c: _Matrix,
     m: GrB_Matrix,
 ) -> GrB_Info {
-    (*c).remove_elements(m);
+    let m = From::from(m);
+    (*c).remove_elements(&m);
+    m.grb_matrix();
     GrB_Info::GrB_SUCCESS
 }
 

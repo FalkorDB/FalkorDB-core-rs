@@ -29,6 +29,12 @@ macro_rules! grb_check {
 
 pub struct SparseMatrix(GrB_Matrix);
 
+impl From<GrB_Matrix> for SparseMatrix {
+    fn from(value: GrB_Matrix) -> Self {
+        SparseMatrix(value)
+    }
+}
+
 impl Drop for SparseMatrix {
     fn drop(&mut self) {
         unsafe {
@@ -238,8 +244,8 @@ impl SparseMatrix {
 
     pub fn assign(
         &mut self,
-        mask: GrB_Matrix,
-        n: GrB_Matrix,
+        mask: &SparseMatrix,
+        n: &SparseMatrix,
         i: *const GrB_Index,
         ni: GrB_Index,
         j: *const GrB_Index,
@@ -249,9 +255,9 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GrB_Matrix_assign(
                 self.0,
-                mask,
+                mask.0,
                 null_mut(),
-                n,
+                n.0,
                 i,
                 ni,
                 j,
@@ -263,7 +269,7 @@ impl SparseMatrix {
 
     pub fn assign_scalar(
         &mut self,
-        mask: GrB_Matrix,
+        mask: &SparseMatrix,
         s: GrB_Scalar,
         i: *const GrB_Index,
         ni: GrB_Index,
@@ -274,7 +280,7 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GrB_Matrix_assign_Scalar(
                 self.0,
-                mask,
+                mask.0,
                 null_mut(),
                 s,
                 i,
@@ -297,11 +303,7 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GrB_mxm(
                 self.0,
-                if let Some(mask) = mask {
-                    mask.0
-                } else {
-                    null_mut()
-                },
+                mask.map_or(null_mut(), |m| m.0),
                 null_mut(),
                 semiring,
                 m.0,
@@ -321,15 +323,11 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GrB_Matrix_eWiseAdd_Semiring(
                 self.0,
-                if let Some(mask) = mask {
-                    mask.0
-                } else {
-                    null_mut()
-                },
+                mask.map_or(null_mut(), |m| m.0),
                 null_mut(),
                 semiring,
-                if let Some(m) = m { m.0 } else { self.0 },
-                if let Some(n) = n { n.0 } else { self.0 },
+                m.unwrap_or(self).0,
+                n.unwrap_or(self).0,
                 null_mut(),
             ));
         }
@@ -345,15 +343,15 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GrB_transpose(
                 self.0,
-                if let Some(m) = mask { m.0 } else { null_mut() },
+                mask.map_or(null_mut(), |m| m.0),
                 accum,
-                if let Some(m) = m { m.0 } else { self.0 },
+                m.unwrap_or(self).0,
                 desc
             ));
         }
     }
 
-    pub fn extract(
+    pub fn extract_col(
         &self,
         v: GrB_Vector,
         mask: GrB_Vector,
