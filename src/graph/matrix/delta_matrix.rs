@@ -601,6 +601,7 @@ mod tests {
 
         let i = 0;
         let j = 1;
+
         a.set_element_bool(i, j);
 
         a.wait(true);
@@ -616,5 +617,98 @@ mod tests {
 
     #[test]
     fn test_del() {
+        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+        let nrows = 100;
+        let ncols = 100;
+        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
+
+        let i = 0;
+        let j = 1;
+
+        a.remove_element(i, j);
+
+        assert_eq!(a.delta_minus.nvals(), 0);
+        assert_eq!(a.delta_plus.nvals(), 0);
+
+        a.set_element_bool(i, j);
+        a.remove_element(i, j);
+
+        assert!(a.dirty());
+        assert_eq!(a.nvals(), 0);
+        assert_eq!(a.matrix.nvals(), 0);
+        assert_eq!(a.delta_minus.nvals(), 0);
+        assert_eq!(a.delta_plus.nvals(), 0);
+
+        a.set_element_bool(i, j);
+        a.wait(true);
+        a.remove_element(i, j);
+
+        assert_eq!(a.nvals(), 0);
+        assert_eq!(a.matrix.nvals(), 1);
+        assert_eq!(a.delta_minus.nvals(), 1);
+        assert_eq!(a.delta_plus.nvals(), 0);
+
+        a.wait(true);
+
+        assert_eq!(a.nvals(), 0);
+        assert_eq!(a.matrix.nvals(), 0);
+        assert_eq!(a.delta_minus.nvals(), 0);
+        assert_eq!(a.delta_plus.nvals(), 0);
+
+        a.set_element_bool(i, j);
+        a.wait(true);
+        a.remove_element(i, j);
+        a.set_element_bool(i, j);
+
+        assert_eq!(a.nvals(), 1);
+        assert_eq!(a.matrix.nvals(), 1);
+        assert_eq!(a.delta_minus.nvals(), 0);
+        assert_eq!(a.delta_plus.nvals(), 0);
+    }
+
+    fn test_transpose() {
+        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+        let nrows = 100;
+        let ncols = 100;
+        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
+        
+        let i = 0;
+        let j = 1;
+        
+        a.set_element_bool(i, j);
+
+        let t = a.transposed.as_ref().unwrap();
+
+        assert_eq!(t.extract_element_bool(j, i), Some(true));
+        assert_eq!(t.nvals(), 1);
+        assert!(t.dirty());
+        assert_eq!(t.m().nvals(), 0);
+        assert_eq!(t.dm().nvals(), 0);
+        assert_eq!(t.dp().nvals(), 1);
+
+        a.wait(true);
+
+        let t = a.transposed.as_ref().unwrap();
+
+        assert_eq!(t.m().nvals(), 1);
+        assert_eq!(t.dm().nvals(), 0);
+        assert_eq!(t.dp().nvals(), 0);
+
+        a.remove_element(i, j);
+
+        let t = a.transposed.as_ref().unwrap();
+
+        assert!(t.dirty());
+        assert_eq!(t.m().nvals(), 1);
+        assert_eq!(t.dm().nvals(), 1);
+        assert_eq!(t.dp().nvals(), 0);
+
+        a.wait(true);
+
+        let t = a.transposed.as_ref().unwrap();
+
+        assert_eq!(t.m().nvals(), 0);
+        assert_eq!(t.dm().nvals(), 0);
+        assert_eq!(t.dp().nvals(), 0);
     }
 }
