@@ -20,6 +20,7 @@ pub struct SparseMatrixIter {
     it: GB_Iterator_opaque,
     depleted: bool,
 }
+
 impl SparseMatrixIter {
     pub fn new(
         m: &SparseMatrix,

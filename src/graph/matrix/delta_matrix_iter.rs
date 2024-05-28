@@ -15,6 +15,16 @@ pub struct DeltaMatrixIter<'a> {
     max_row: GrB_Index,
 }
 impl<'a> DeltaMatrixIter<'a> {
+    pub fn new(m: &'a DeltaMatrix) -> DeltaMatrixIter<'a> {
+        DeltaMatrixIter {
+            matrix: Some(m),
+            min_row: 0,
+            max_row: u64::MAX,
+            m_it: SparseMatrixIter::new(m.m(), 0, u64::MAX),
+            dp_it: SparseMatrixIter::new(m.dp(), 0, u64::MAX),
+        }
+    }
+
     pub fn attach(
         &mut self,
         m: &'a DeltaMatrix,
@@ -67,7 +77,13 @@ impl<'a> DeltaMatrixIter<'a> {
         }
 
         while let Some((i, j, v)) = self.m_it.next_bool(self.max_row) {
-            if self.matrix.unwrap().dm().extract_element_bool(i, j).is_none() {
+            if self
+                .matrix
+                .unwrap()
+                .dm()
+                .extract_element_bool(i, j)
+                .is_none()
+            {
                 return Ok(Some((i, j, v)));
             }
         }
@@ -81,7 +97,13 @@ impl<'a> DeltaMatrixIter<'a> {
         }
 
         while let Some((i, j, v)) = self.m_it.next_u64(self.max_row) {
-            if self.matrix.unwrap().dm().extract_element_bool(i, j).is_none() {
+            if self
+                .matrix
+                .unwrap()
+                .dm()
+                .extract_element_bool(i, j)
+                .is_none()
+            {
                 return Ok(Some((i, j, v)));
             }
         }
@@ -91,5 +113,54 @@ impl<'a> DeltaMatrixIter<'a> {
 
     pub fn reset(&mut self) {
         self.attach_range(self.matrix.unwrap(), self.min_row, self.max_row);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::graph::matrix::{
+        delta_matrix::DeltaMatrix,
+        GraphBLAS::{GrB_BOOL, GrB_Mode, GrB_init},
+    };
+
+    use super::DeltaMatrixIter;
+
+    #[test]
+    fn test_attach() {
+        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+        let nrows = 100;
+        let ncols = 100;
+        let a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
+        let mut it = DeltaMatrixIter::new(&a);
+        it.attach(&a);
+
+        assert!(it.is_attached(&a));
+
+        it.detach();
+
+        assert!(it.matrix.is_none());
+    }
+
+    #[test]
+    fn test_next() {
+        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+        let nrows = 100;
+        let ncols = 100;
+        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
+
+        a.set_element_bool(1, 2);
+        a.wait(true);
+
+        a.remove_element(1, 2);
+        a.set_element_bool(2, 3);
+
+        let mut it = DeltaMatrixIter::new(&a);
+
+        assert!(it.is_attached(&a));
+
+        assert_eq!(it.next_bool(), Ok(Some((2u64, 3u64, true))));
+
+        assert_eq!(it.next_bool(), Ok(None));
     }
 }
