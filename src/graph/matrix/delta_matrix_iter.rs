@@ -16,6 +16,7 @@ pub struct DeltaMatrixIter<'a> {
 }
 
 impl<'a> DeltaMatrixIter<'a> {
+    #[cfg(test)]
     pub fn new(m: &'a DeltaMatrix) -> DeltaMatrixIter<'a> {
         DeltaMatrixIter {
             matrix: Some(m),
@@ -127,9 +128,13 @@ mod tests {
 
     use super::DeltaMatrixIter;
 
+    fn test_init() {
+        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+    }
+
     #[test]
     fn test_attach() {
-        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+        test_init();
         let nrows = 100;
         let ncols = 100;
         let a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
@@ -145,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_next() {
-        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+        test_init();
         let nrows = 100;
         let ncols = 100;
         let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
