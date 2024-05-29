@@ -80,7 +80,7 @@ impl<'a> DeltaMatrixIter<'a> {
     }
 
     /// Returns the next bool of this [`DeltaMatrixIter`].
-    /// 
+    ///
     /// # Errors
     ///
     /// This function will return an error if no matrix was attached.
@@ -105,7 +105,7 @@ impl<'a> DeltaMatrixIter<'a> {
     }
 
     /// Returns the next u64 of this [`DeltaMatrixIter`].
-    /// 
+    ///
     /// # Errors
     ///
     /// This function will return an error if no matrix was attached.
