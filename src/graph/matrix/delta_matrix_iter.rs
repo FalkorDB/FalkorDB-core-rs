@@ -14,6 +14,7 @@ pub struct DeltaMatrixIter<'a> {
     min_row: GrB_Index,
     max_row: GrB_Index,
 }
+
 impl<'a> DeltaMatrixIter<'a> {
     pub fn new(m: &'a DeltaMatrix) -> DeltaMatrixIter<'a> {
         DeltaMatrixIter {
@@ -151,16 +152,17 @@ mod tests {
 
         a.set_element_bool(1, 2);
         a.wait(true);
-
         a.remove_element(1, 2);
         a.set_element_bool(2, 3);
 
         let mut it = DeltaMatrixIter::new(&a);
 
         assert!(it.is_attached(&a));
-
         assert_eq!(it.next_bool(), Ok(Some((2u64, 3u64, true))));
-
         assert_eq!(it.next_bool(), Ok(None));
+        assert_eq!(it.next_bool(), Ok(None));
+
+        it.detach();
+        assert_eq!(it.next_bool(), Err(()));
     }
 }

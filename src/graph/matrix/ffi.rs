@@ -40,16 +40,6 @@ unsafe extern "C" fn Delta_Matrix_M(c: _Matrix) -> GrB_Matrix {
 }
 
 #[no_mangle]
-unsafe extern "C" fn Delta_Matrix_DP(c: _Matrix) -> GrB_Matrix {
-    (&*c).dp().grb_matrix_ref()
-}
-
-#[no_mangle]
-unsafe extern "C" fn Delta_Matrix_DM(c: _Matrix) -> GrB_Matrix {
-    (&*c).dm().grb_matrix_ref()
-}
-
-#[no_mangle]
 unsafe extern "C" fn Delta_Matrix_nrows(
     nrows: *mut GrB_Index,
     c: _Matrix,
