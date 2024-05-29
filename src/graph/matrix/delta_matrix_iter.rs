@@ -27,6 +27,7 @@ impl<'a> DeltaMatrixIter<'a> {
         }
     }
 
+    /// Initialize the iterator to iterate over [`DeltaMatrix`].
     pub fn attach(
         &mut self,
         m: &'a DeltaMatrix,
@@ -34,6 +35,7 @@ impl<'a> DeltaMatrixIter<'a> {
         self.attach_range(m, 0, u64::MAX);
     }
 
+    /// Initialize the iterator to iterate over [`DeltaMatrix`] within row range.
     pub fn attach_range(
         &mut self,
         m: &'a DeltaMatrix,
@@ -47,10 +49,12 @@ impl<'a> DeltaMatrixIter<'a> {
         self.dp_it = SparseMatrixIter::new(m.dp(), min_row, max_row);
     }
 
+    /// Detach the iterator from specific matrix
     pub fn detach(&mut self) {
         self.matrix = None;
     }
 
+    /// Check if the iterator is attached to the given [`DeltaMatrix`].
     pub fn is_attached(
         &self,
         m: &DeltaMatrix,
@@ -58,6 +62,7 @@ impl<'a> DeltaMatrixIter<'a> {
         self.matrix.is_some() && std::ptr::eq(self.matrix.unwrap().m(), m.m())
     }
 
+    /// Constraint the iterator to iterate over specific row.
     pub fn iterate_row(
         &mut self,
         row_idx: u64,
@@ -65,6 +70,7 @@ impl<'a> DeltaMatrixIter<'a> {
         self.attach_range(self.matrix.unwrap(), row_idx, row_idx);
     }
 
+    /// Constraint the iterator to iterate over specific row range.
     pub fn iterate_range(
         &mut self,
         start_row_idx: u64,
@@ -73,6 +79,11 @@ impl<'a> DeltaMatrixIter<'a> {
         self.attach_range(self.matrix.unwrap(), start_row_idx, end_row_idx);
     }
 
+    /// Returns the next bool of this [`DeltaMatrixIter`].
+    /// 
+    /// # Errors
+    ///
+    /// This function will return an error if no matrix was attached.
     pub fn next_bool(&mut self) -> Result<Option<(u64, u64, bool)>, ()> {
         if self.matrix.is_none() {
             return Err(());
@@ -93,6 +104,11 @@ impl<'a> DeltaMatrixIter<'a> {
         Ok(self.dp_it.next_bool(self.max_row))
     }
 
+    /// Returns the next u64 of this [`DeltaMatrixIter`].
+    /// 
+    /// # Errors
+    ///
+    /// This function will return an error if no matrix was attached.
     pub fn next_u64(&mut self) -> Result<Option<(u64, u64, u64)>, ()> {
         if self.matrix.is_none() {
             return Err(());
@@ -113,6 +129,7 @@ impl<'a> DeltaMatrixIter<'a> {
         Ok(self.dp_it.next_u64(self.max_row))
     }
 
+    /// Reset this [`DeltaMatrixIter`] to start from the beggining.
     pub fn reset(&mut self) {
         self.attach_range(self.matrix.unwrap(), self.min_row, self.max_row);
     }
