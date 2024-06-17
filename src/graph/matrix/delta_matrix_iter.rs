@@ -95,7 +95,7 @@ impl<'a> DeltaMatrixIter<'a> {
         while let (Some(i), Some(j)) = (self.m_it.get_row(), self.m_it.get_col()) {
             self.m_it.next(self.max_row);
             if let (Some(mi), Some(mj)) = (self.dm_it.get_row(), self.dm_it.get_col()) {
-                if i <= mi && j < mj {
+                if i < mi || (i == mi && j < mj) {
                     return Ok(Some((i, j)));
                 }
                 debug_assert!(i == mi && j == mj);
@@ -130,7 +130,7 @@ impl<'a> DeltaMatrixIter<'a> {
         ) {
             self.m_it.next(self.max_row);
             if let (Some(mi), Some(mj)) = (self.dm_it.get_row(), self.dm_it.get_col()) {
-                if i <= mi && j < mj {
+                if i < mi || (i == mi && j < mj) {
                     return Ok(Some((i, j, v)));
                 }
                 debug_assert!(i == mi && j == mj);
