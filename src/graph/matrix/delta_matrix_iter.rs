@@ -11,6 +11,7 @@ pub struct DeltaMatrixIter<'a> {
     matrix: Option<&'a DeltaMatrix>,
     m_it: SparseMatrixIter,
     dp_it: SparseMatrixIter,
+    dm_it: SparseMatrixIter,
     min_row: GrB_Index,
     max_row: GrB_Index,
 }
@@ -24,6 +25,7 @@ impl<'a> DeltaMatrixIter<'a> {
             max_row: u64::MAX,
             m_it: SparseMatrixIter::new(m.m(), 0, u64::MAX),
             dp_it: SparseMatrixIter::new(m.dp(), 0, u64::MAX),
+            dm_it: SparseMatrixIter::new(m.dm(), 0, u64::MAX),
         }
     }
 
@@ -47,6 +49,7 @@ impl<'a> DeltaMatrixIter<'a> {
         self.max_row = max_row;
         self.m_it = SparseMatrixIter::new(m.m(), min_row, max_row);
         self.dp_it = SparseMatrixIter::new(m.dp(), min_row, max_row);
+        self.dm_it = SparseMatrixIter::new(m.dm(), min_row, max_row);
     }
 
     /// Detach the iterator from specific matrix
@@ -84,24 +87,30 @@ impl<'a> DeltaMatrixIter<'a> {
     /// # Errors
     ///
     /// This function will return an error if no matrix was attached.
-    pub fn next_bool(&mut self) -> Result<Option<(u64, u64, bool)>, ()> {
+    pub fn next_bool(&mut self) -> Result<Option<(u64, u64)>, ()> {
         if self.matrix.is_none() {
             return Err(());
         }
 
-        while let Some((i, j, v)) = self.m_it.next_bool(self.max_row) {
-            if self
-                .matrix
-                .unwrap()
-                .dm()
-                .extract_element_bool(i, j)
-                .is_none()
-            {
-                return Ok(Some((i, j, v)));
+        while let (Some(i), Some(j)) = (self.m_it.get_row(), self.m_it.get_col()) {
+            self.m_it.next(self.max_row);
+            if let (Some(mi), Some(mj)) = (self.dm_it.get_row(), self.dm_it.get_col()) {
+                if i < mi && j < mj {
+                    return Ok(Some((i, j)));
+                }
+                debug_assert!(i == mi && j == mj);
+                self.dm_it.next(self.max_row);
+            } else {
+                return Ok(Some((i, j)));
             }
         }
 
-        Ok(self.dp_it.next_bool(self.max_row))
+        if let (Some(i), Some(j)) = (self.dp_it.get_row(), self.dp_it.get_col()) {
+            self.dp_it.next(self.max_row);
+            return Ok(Some((i, j)));
+        }
+
+        Ok(None)
     }
 
     /// Returns the next u64 of this [`DeltaMatrixIter`].
@@ -114,19 +123,33 @@ impl<'a> DeltaMatrixIter<'a> {
             return Err(());
         }
 
-        while let Some((i, j, v)) = self.m_it.next_u64(self.max_row) {
-            if self
-                .matrix
-                .unwrap()
-                .dm()
-                .extract_element_bool(i, j)
-                .is_none()
-            {
+        while let (Some(i), Some(j), Some(v)) = (
+            self.m_it.get_row(),
+            self.m_it.get_col(),
+            self.m_it.get_u64(),
+        ) {
+            self.m_it.next(self.max_row);
+            if let (Some(mi), Some(mj)) = (self.dm_it.get_row(), self.dm_it.get_col()) {
+                if i < mi && j < mj {
+                    return Ok(Some((i, j, v)));
+                }
+                debug_assert!(i == mi && j == mj);
+                self.dm_it.next(self.max_row);
+            } else {
                 return Ok(Some((i, j, v)));
             }
         }
 
-        Ok(self.dp_it.next_u64(self.max_row))
+        if let (Some(i), Some(j), Some(v)) = (
+            self.dp_it.get_row(),
+            self.dp_it.get_col(),
+            self.dp_it.get_u64(),
+        ) {
+            self.dp_it.next(self.max_row);
+            return Ok(Some((i, j, v)));
+        }
+
+        Ok(None)
     }
 
     /// Reset this [`DeltaMatrixIter`] to start from the beggining.
@@ -180,7 +203,7 @@ mod tests {
         let mut it = DeltaMatrixIter::new(&a);
 
         assert!(it.is_attached(&a));
-        assert_eq!(it.next_bool(), Ok(Some((2u64, 3u64, true))));
+        assert_eq!(it.next_bool(), Ok(Some((2u64, 3u64))));
         assert_eq!(it.next_bool(), Ok(None));
         assert_eq!(it.next_bool(), Ok(None));
 

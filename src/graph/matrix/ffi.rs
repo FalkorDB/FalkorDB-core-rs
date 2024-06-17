@@ -302,7 +302,7 @@ unsafe extern "C" fn Delta_MatrixTupleIter_next_BOOL(
     val: *mut bool,
 ) -> GrB_Info {
     match (*iter).next_bool() {
-        Ok(Some((r, c, v))) => {
+        Ok(Some((r, c))) => {
             if !row.is_null() {
                 *row = r;
             }
@@ -310,7 +310,7 @@ unsafe extern "C" fn Delta_MatrixTupleIter_next_BOOL(
                 *col = c;
             }
             if !val.is_null() {
-                *val = v;
+                *val = true;
             }
             GrB_Info::GrB_SUCCESS
         }
