@@ -232,7 +232,7 @@ impl DeltaMatrix {
             self.delta_plus.set_element_u64(x, i, j);
             self.set_dirty(true);
         } else {
-            debug_assert_eq!(self.extract_element_u64(i, j), Some(x));
+            self.matrix.set_element_u64(x, i, j);
         }
     }
 
