@@ -132,16 +132,6 @@ unsafe extern "C" fn Delta_Matrix_extractElement_UINT64(
 }
 
 #[no_mangle]
-unsafe extern "C" fn Delta_Matrix_extract_row(
-    c: _Matrix,
-    v: GrB_Vector,
-    i: GrB_Index,
-) -> GrB_Info {
-    (&*c).extract_row(v, i);
-    GrB_Info::GrB_SUCCESS
-}
-
-#[no_mangle]
 unsafe extern "C" fn Delta_Matrix_removeElement(
     c: _Matrix,
     i: GrB_Index,

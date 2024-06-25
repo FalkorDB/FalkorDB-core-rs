@@ -86,8 +86,8 @@ impl DeltaMatrix {
                 transposed: if transpose {
                     let mut t = Box::new(Self {
                         dirty: false,
-                        matrix: SparseMatrix::new(ty, ncols, nrows),
-                        delta_plus: SparseMatrix::new(ty, ncols, nrows),
+                        matrix: SparseMatrix::new(GrB_BOOL, ncols, nrows),
+                        delta_plus: SparseMatrix::new(GrB_BOOL, ncols, nrows),
                         delta_minus: SparseMatrix::new(GrB_BOOL, ncols, nrows),
                         transposed: None,
                         mutex: None,
@@ -219,7 +219,7 @@ impl DeltaMatrix {
         j: u64,
     ) {
         if let Some(t) = self.transposed.as_mut() {
-            t.set_element_u64(x, j, i);
+            t.set_element_bool(j, i);
         }
 
         // if the value marked as deleted in dm remove it
@@ -512,27 +512,6 @@ impl DeltaMatrix {
             );
         }
         self.delta_plus.clear();
-    }
-
-    /// Extract single row from this [`DeltaMatrix`] into a GrB_Vector.
-    pub fn extract_row(
-        &self,
-        v: GrB_Vector,
-        i: u64,
-    ) {
-        unsafe {
-            let mut vmask = MaybeUninit::uninit();
-            GrB_Vector_new(vmask.as_mut_ptr(), GrB_BOOL, self.ncols());
-            let mask = vmask.assume_init();
-
-            self.delta_minus
-                .extract_col(mask, null_mut(), null_mut(), i, GrB_DESC_T0);
-            self.matrix
-                .extract_col(v, mask, null_mut(), i, GrB_DESC_SCT0);
-            self.delta_plus
-                .extract_col(v, mask, GxB_LOR_BOOL, i, GrB_DESC_SCT0);
-            GrB_Vector_free(vmask.as_mut_ptr());
-        }
     }
 
     /// Check if need to resize or to apply pending changes on this [`DeltaMatrix`].
