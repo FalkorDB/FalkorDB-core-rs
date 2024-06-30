@@ -12,10 +12,8 @@ use crate::binding::graph::{ConfigOptionField, Config_Option_get};
 use super::{
     sparse_matrix::SparseMatrix,
     GraphBLAS::{
-        GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_DESC_SCT0,
-        GrB_DESC_T0, GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type, GrB_Vector,
-        GrB_Vector_free, GrB_Vector_new, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE, GxB_LOR_BOOL,
-        GxB_SPARSE,
+        GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_Scalar_free,
+        GrB_Scalar_new, GrB_Semiring, GrB_Type, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE, GxB_SPARSE,
     },
 };
 
