@@ -87,6 +87,19 @@ unsafe extern "C" fn Delta_Matrix_setElement_BOOL(
 }
 
 #[no_mangle]
+unsafe extern "C" fn Delta_Matrix_setElements_BOOL(
+    c: _Matrix,
+    i: *const GrB_Index,
+    j: *const GrB_Index,
+    count: usize,
+) -> GrB_Info {
+    for k in 0..count {
+        (*c).set_element_bool(*i.add(k), *j.add(k));
+    }
+    GrB_Info::GrB_SUCCESS
+}
+
+#[no_mangle]
 unsafe extern "C" fn Delta_Matrix_setElement_UINT64(
     c: _Matrix,
     x: u64,
