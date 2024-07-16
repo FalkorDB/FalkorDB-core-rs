@@ -4,7 +4,6 @@
  */
 
 use std::{mem::MaybeUninit, ptr::null_mut};
-
 use libc::pthread_mutex_t;
 
 use crate::binding::graph::{ConfigOptionField, Config_Option_get};
