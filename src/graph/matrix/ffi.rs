@@ -129,8 +129,8 @@ unsafe extern "C" fn Delta_Matrix_extractElement_BOOL(
 
 #[no_mangle]
 unsafe extern "C" fn Delta_Matrix_extractElement_UINT64(
-    c: _Matrix,
     x: *mut u64,
+    c: _Matrix,
     i: GrB_Index,
     j: GrB_Index,
 ) -> GrB_Info {
