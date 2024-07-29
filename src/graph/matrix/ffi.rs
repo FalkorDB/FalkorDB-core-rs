@@ -4,7 +4,7 @@
  */
 
 use std::ptr::null_mut;
-
+use std::slice;
 use super::{
     delta_matrix::DeltaMatrix,
     delta_matrix_iter::DeltaMatrixIter,
@@ -93,8 +93,11 @@ unsafe extern "C" fn Delta_Matrix_setElements_BOOL(
     j: *const GrB_Index,
     count: usize,
 ) -> GrB_Info {
+    // In debug this somehow faults if I use pointer .add() and offset()???
+    let i = slice::from_raw_parts(i, count);
+    let j = slice::from_raw_parts(j, count);
     for k in 0..count {
-        (*c).set_element_bool(*i.add(k), *j.add(k));
+        (*c).set_element_bool(i[k], j[k]);
     }
     GrB_Info::GrB_SUCCESS
 }
