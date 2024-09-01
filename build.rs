@@ -13,7 +13,6 @@ fn main() {
         println!("cargo:rustc-link-arg={bin_root}/src/falkordb.so");
         println!("cargo:rustc-link-arg=-L{graphblas_dir}");
         println!("cargo:rustc-link-arg=-lgraphblas");
-        println!("cargo:rustc-link-arg=-fstack-protector");
         if clang == "1" {
             println!("cargo:rustc-link-arg=-L/opt/homebrew/opt/libomp/lib");
             println!("cargo:rustc-link-arg=-L/usr/lib/llvm-17/lib");

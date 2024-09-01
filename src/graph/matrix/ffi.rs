@@ -8,7 +8,7 @@ use std::ptr::null_mut;
 use super::{
     delta_matrix::DeltaMatrix,
     delta_matrix_iter::DeltaMatrixIter,
-    GraphBLAS::{GrB_Index, GrB_Info, GrB_Matrix, GrB_Semiring, GrB_Type, GrB_Vector},
+    GraphBLAS::{GrB_Index, GrB_Info, GrB_Matrix, GrB_Semiring, GrB_Type},
 };
 
 type _Matrix = *mut DeltaMatrix;
