@@ -2,6 +2,7 @@
  * Copyright FalkorDB Ltd. 2023 - present
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
+
 use std::{ffi::c_char, ptr::null_mut};
 
 use crate::binding::graph::*;
