@@ -13,9 +13,10 @@ use crate::{
     binding::{
         crwlock::CRWLock,
         graph::{
-            AttributeSet, AttributeSet_Free, DataBlock, DataBlockIterator, DataBlock_Accommodate,
-            DataBlock_AllocateItem, DataBlock_AllocateItemOutOfOrder, DataBlock_DeleteItem,
-            DataBlock_DeletedItems, DataBlock_DeletedItemsCount, DataBlock_Ensure,
+            AttributeSet, AttributeSet_Free, DataBlock, DataBlockIterator, DataBlockIterator_Free,
+            DataBlockIterator_Next, DataBlock_Accommodate, DataBlock_AllocateItem,
+            DataBlock_AllocateItemOutOfOrder, DataBlock_DeleteItem, DataBlock_DeletedItems,
+            DataBlock_DeletedItemsCount, DataBlock_Ensure, DataBlock_Free, DataBlock_FullScan,
             DataBlock_GetItem, DataBlock_GetReservedIdx, DataBlock_ItemCap, DataBlock_ItemCount,
             DataBlock_MarkAsDeletedOutOfOrder, DataBlock_New, DataBlock_Scan, Edge, EdgeID,
             LabelID, Node, NodeID, RelationID,
@@ -111,6 +112,7 @@ pub struct Graph {
     writelocked: bool,
     matrix_policy: MatrixPolicy,
     stats: GraphStatistics,
+    partial: bool,
 }
 
 impl Graph {
@@ -150,6 +152,7 @@ impl Graph {
                 node_count: Vec::new(),
                 edge_count: Vec::new(),
             },
+            partial: false,
         }
     }
 
@@ -1019,6 +1022,47 @@ impl Graph {
 
         if !connected {
             self.get_adjacency_matrix(false).remove_element(src, dest);
+        }
+    }
+
+    pub fn set_partial(&mut self) {
+        self.partial = true;
+    }
+}
+
+impl Drop for Graph {
+    fn drop(&mut self) {
+        unsafe {
+            let it = if self.partial {
+                DataBlock_FullScan(self.nodes)
+            } else {
+                self.scan_nodes()
+            };
+            loop {
+                let set = DataBlockIterator_Next(it, null_mut()) as *mut AttributeSet;
+                if set.is_null() {
+                    break;
+                }
+                AttributeSet_Free(set);
+            }
+            DataBlockIterator_Free(it);
+
+            let it = if self.partial {
+                DataBlock_FullScan(self.edges)
+            } else {
+                self.scan_edges()
+            };
+            loop {
+                let set = DataBlockIterator_Next(it, null_mut()) as *mut AttributeSet;
+                if set.is_null() {
+                    break;
+                }
+                AttributeSet_Free(set);
+            }
+            DataBlockIterator_Free(it);
+
+            DataBlock_Free(self.nodes);
+            DataBlock_Free(self.edges);
         }
     }
 }

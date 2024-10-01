@@ -467,6 +467,7 @@ unsafe extern "C" fn Graph_GetZeroMatrix(g: *mut Graph) -> *mut DeltaMatrix {
 #[no_mangle]
 #[allow(non_snake_case)]
 unsafe extern "C" fn Graph_PartialFree(g: *mut Graph) {
+    (&mut *g).set_partial();
     drop(Box::from_raw(g));
 }
 
