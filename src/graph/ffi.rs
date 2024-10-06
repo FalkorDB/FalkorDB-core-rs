@@ -173,7 +173,11 @@ unsafe extern "C" fn Graph_CreateNode(
 ) {
     (&mut *g).create_node(
         n.as_mut().unwrap(),
-        from_raw_parts(labels, label_count as usize),
+        if label_count == 0 {
+            &[]
+        } else {
+            from_raw_parts(labels, label_count as usize)
+        },
     );
 }
 
