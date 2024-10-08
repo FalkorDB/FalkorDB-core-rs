@@ -384,10 +384,10 @@ unsafe extern "C" fn Graph_GetNodeEdges(
     edge_type: RelationID,
     edges: *mut *mut Edge,
 ) {
-    let mut es = Vec::new();
-    (&mut *g).get_node_edges(n.as_ref().unwrap(), dir, edge_type, &mut es);
     let mut arr_ptr = (*edges as *mut ArrayHeader).sub(1);
     let mut arr = arr_ptr.as_mut().unwrap();
+    let mut es = Vec::with_capacity(arr.len as usize);
+    (&mut *g).get_node_edges(n.as_ref().unwrap(), dir, edge_type, &mut es);
     if arr.cap - arr.len < es.len() as u32 {
         arr.cap = arr.len + es.len() as u32;
         arr_ptr = RedisModule_Realloc.unwrap()(
