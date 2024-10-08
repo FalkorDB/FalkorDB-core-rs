@@ -220,6 +220,13 @@ extern "C" {
         idx: u64,
     ) -> *mut c_void;
     pub fn DataBlock_DeletedItems(dataBlock: *const DataBlock) -> *mut u64;
+    pub fn DataBlock_FullScan(dataBlock: *const DataBlock) -> *mut DataBlockIterator;
+    pub fn DataBlock_Free(dataBlock: *const DataBlock);
+    pub fn DataBlockIterator_Next(
+        iter: *mut DataBlockIterator,
+        id: *mut u64,
+    ) -> *mut c_void;
+    pub fn DataBlockIterator_Free(iter: *mut DataBlockIterator);
 }
 
 pub struct GraphContextAPI {

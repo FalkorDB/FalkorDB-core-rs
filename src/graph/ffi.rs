@@ -173,7 +173,11 @@ unsafe extern "C" fn Graph_CreateNode(
 ) {
     (&mut *g).create_node(
         n.as_mut().unwrap(),
-        from_raw_parts(labels, label_count as usize),
+        if label_count == 0 {
+            &[]
+        } else {
+            from_raw_parts(labels, label_count as usize)
+        },
     );
 }
 
@@ -467,6 +471,7 @@ unsafe extern "C" fn Graph_GetZeroMatrix(g: *mut Graph) -> *mut DeltaMatrix {
 #[no_mangle]
 #[allow(non_snake_case)]
 unsafe extern "C" fn Graph_PartialFree(g: *mut Graph) {
+    (&mut *g).set_partial();
     drop(Box::from_raw(g));
 }
 
