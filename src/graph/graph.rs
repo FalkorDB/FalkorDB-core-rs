@@ -273,8 +273,7 @@ impl Graph {
 
     pub fn add_relation_type(&mut self) -> RelationID {
         let n = self.required_matrix_dim();
-        let r = Tensor::new(n, n);
-        self.relations.push(r);
+        self.relations.push(Tensor::new(n, n));
         self.stats.introduce_relationship();
         self.relation_type_count() - 1
     }
@@ -567,7 +566,7 @@ impl Graph {
         &mut self,
         r: RelationID,
     ) -> bool {
-        let a = self.relations[r as usize].m.nvals();
+        let a = self.get_relation_matrix(r, false).nvals();
         let b = self.relation_edge_count(r);
         a != b
     }
