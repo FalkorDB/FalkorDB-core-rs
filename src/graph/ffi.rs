@@ -17,7 +17,7 @@ use crate::{
 };
 
 use super::{
-    graph::{Graph, GraphEdgeDir, MatrixPolicy},
+    graph::{EdgeIterator, Graph, GraphEdgeDir, MatrixPolicy},
     matrix::{
         delta_matrix::DeltaMatrix,
         tensor::{Tensor, TensorRangeIterator},
@@ -350,29 +350,23 @@ unsafe extern "C" fn Graph_GetEdge(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_GetEdgesConnectingNodes(
+unsafe extern "C" fn Graph_EdgeIteratorInit(
     g: *mut Graph,
-    src_id: NodeID,
-    dest_id: NodeID,
+    it: *mut EdgeIterator,
+    srcID: NodeID,
+    destID: NodeID,
     r: RelationID,
-    edges: *mut *mut Edge,
 ) {
-    let es = (&mut *g).get_edges_connecting_nodes(src_id, dest_id, r);
-    let mut arr_ptr = (*edges as *mut ArrayHeader).sub(1);
-    let mut arr = arr_ptr.as_mut().unwrap();
-    if arr.cap - arr.len < es.len() as u32 {
-        arr.cap = arr.len + es.len() as u32;
-        arr_ptr = RedisModule_Realloc.unwrap()(
-            arr_ptr as _,
-            (arr.cap as usize * size_of::<Edge>() + size_of::<ArrayHeader>()) as usize,
-        ) as _;
-        edges.write(arr_ptr.add(1) as _);
-        arr = arr_ptr.as_mut().unwrap();
-    }
-    for (i, e) in es.iter().enumerate() {
-        (*edges).add(arr.len as usize + i).write(*e);
-    }
-    arr.len += es.len() as u32;
+    (&mut *it).init(g.as_mut().unwrap(), srcID, destID, r);
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe extern "C" fn EdgeIterator_Next(
+    it: *mut EdgeIterator,
+    e: *mut Edge,
+) -> bool {
+    (*it).next(e.as_mut().unwrap())
 }
 
 #[no_mangle]

@@ -30,8 +30,11 @@ use crate::{
 };
 
 use super::matrix::{
-    delta_matrix::DeltaMatrix, delta_matrix_iter::DeltaMatrixIter, sparse_matrix::SparseMatrix,
-    tensor::Tensor, GraphBLAS::GrB_BOOL,
+    delta_matrix::DeltaMatrix,
+    delta_matrix_iter::DeltaMatrixIter,
+    sparse_matrix::SparseMatrix,
+    tensor::{Tensor, TensorIterator},
+    GraphBLAS::GrB_BOOL,
 };
 
 const INVALID_ENTITY_ID: NodeID = u64::MAX;
@@ -598,58 +601,6 @@ impl Graph {
         !e.attributes.is_null()
     }
 
-    pub fn get_edges_connecting_nodes(
-        &mut self,
-        src_id: NodeID,
-        dest_id: NodeID,
-        r: RelationID,
-    ) -> Vec<Edge> {
-        let mut edges = Vec::new();
-
-        if r == -1 {
-            let type_count = self.relation_type_count();
-            for i in 0..type_count {
-                self._get_edges_connecting_nodes(i, src_id, dest_id, &mut edges);
-            }
-        } else {
-            self._get_edges_connecting_nodes(r, src_id, dest_id, &mut edges);
-        }
-
-        edges
-    }
-
-    fn _get_edges_connecting_nodes(
-        &mut self,
-        r: RelationID,
-        src_id: u64,
-        dest_id: u64,
-        edges: &mut Vec<Edge>,
-    ) {
-        if r == -2 {
-            return;
-        }
-
-        debug_assert!(r >= 0 && r < self.relations.len() as i32);
-
-        self.get_relation_matrix(r, false);
-
-        let mut e = Edge {
-            src_id,
-            dest_id,
-            id: 0,
-            attributes: null_mut(),
-            relation_id: r,
-            relationship: null_mut(),
-        };
-
-        let it = self.relations[r as usize].iter(src_id, dest_id);
-
-        for (_, _, edge_id) in it {
-            self.get_edge(edge_id, &mut e);
-            edges.push(e);
-        }
-    }
-
     pub fn _get_outgoing_node_edges(
         &mut self,
         n: &Node,
@@ -1063,6 +1014,59 @@ impl Drop for Graph {
             DataBlock_Free(self.nodes);
             DataBlock_Free(self.edges);
         }
+    }
+}
+
+pub struct EdgeIterator<'a> {
+    graph: &'a mut Graph,
+    all_edges: bool,
+    r: RelationID,
+    src_id: NodeID,
+    dest_id: NodeID,
+    it: TensorIterator,
+}
+impl<'a> EdgeIterator<'a> {
+    pub fn init(
+        &mut self,
+        g: &'a mut Graph,
+        src_id: NodeID,
+        dest_id: NodeID,
+        r: RelationID,
+    ) {
+        debug_assert!(r >= -1 && r < g.relations.len() as i32);
+        self.graph = g;
+        self.src_id = src_id;
+        self.dest_id = dest_id;
+        if r == -1 {
+            self.all_edges = true;
+            self.r = 0;
+        } else {
+            self.all_edges = false;
+            self.r = r;
+        }
+        self.graph.get_relation_matrix(self.r, false);
+        self.it = self.graph.relations[self.r as usize].iter(src_id, dest_id);
+    }
+
+    pub fn next(
+        &mut self,
+        e: &mut Edge,
+    ) -> bool {
+        if let Some((src_id, dest_id, edge_id)) = self.it.next() {
+            e.src_id = src_id;
+            e.dest_id = dest_id;
+            e.relation_id = self.r;
+            self.graph.get_edge(edge_id, e);
+            return true;
+        }
+
+        if self.all_edges && self.r + 1 < self.graph.relation_type_count() {
+            self.r += 1;
+            self.graph.get_relation_matrix(self.r, false);
+            self.it = self.graph.relations[self.r as usize].iter(self.src_id, self.dest_id);
+            return self.next(e);
+        }
+        false
     }
 }
 
