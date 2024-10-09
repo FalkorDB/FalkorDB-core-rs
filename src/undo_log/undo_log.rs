@@ -242,34 +242,34 @@ impl UndoLog {
         ));
     }
 
-    pub unsafe fn rollback(
+    pub fn rollback(
         &mut self,
         gc: &mut GraphContextAPI,
     ) {
-        let mut g = gc.get_graph();
+        let g = gc.get_graph();
         for op in self.ops.drain(..).rev() {
             match op {
                 UndoOp::CreateNodes(mut nodes) => {
                     for node in nodes.iter_mut().rev() {
                         gc.delete_node_from_indices(node, null_mut(), 0);
                     }
-                    g.delete_nodes(nodes.as_mut_ptr(), nodes.len() as u64);
+                    g.delete_nodes(&nodes);
                 }
                 UndoOp::CreateEdges(mut edges) => {
                     for edge in edges.iter_mut().rev() {
                         gc.delete_edge_from_indices(edge);
                     }
-                    g.delete_edges(edges.as_mut_ptr(), edges.len() as u64);
+                    g.delete_edges(&mut edges);
                 }
                 UndoOp::DeleteNodes(mut vec) => {
                     for (node_id, set, labels) in vec.iter_mut().rev() {
                         let mut node = Node {
                             attributes: null_mut(),
-                            id: -1,
+                            id: u64::MAX,
                         };
-                        g.create_node(&mut node, labels.as_mut_ptr(), labels.len() as u32);
+                        g.create_node(&mut node, labels);
                         debug_assert!(*node_id >= node.id);
-                        node.attributes.write(*set);
+                        unsafe { node.attributes.write(*set) };
                         gc.add_node_to_indices(&mut node);
                     }
                 }
@@ -277,7 +277,7 @@ impl UndoLog {
                     for (edge_id, src_id, dest_id, relation_id, set) in vec.iter_mut().rev() {
                         let mut edge = Edge {
                             attributes: null_mut(),
-                            id: -1,
+                            id: u64::MAX,
                             relationship: null_mut(),
                             relation_id: *relation_id,
                             src_id: *src_id,
@@ -285,7 +285,7 @@ impl UndoLog {
                         };
                         g.create_edge(edge.src_id, edge.dest_id, edge.relation_id, &mut edge);
                         debug_assert!(*edge_id >= edge.id);
-                        edge.attributes.write(*set);
+                        unsafe { edge.attributes.write(*set) };
                         gc.add_edge_to_indices(&mut edge);
                     }
                 }
@@ -304,12 +304,12 @@ impl UndoLog {
                 UndoOp::AddLabels(mut vec) => {
                     for (node, labels) in vec.iter_mut().rev() {
                         gc.delete_node_from_indices(node, labels.as_mut_ptr(), labels.len() as u32);
-                        g.remove_node_labels(node.id, labels.as_mut_ptr(), labels.len() as u32);
+                        g.remove_node_labels(node.id, labels);
                     }
                 }
                 UndoOp::RemoveLabels(mut vec) => {
                     for (node, labels) in vec.iter_mut().rev() {
-                        g.label_node(node.id, labels.as_mut_ptr(), labels.len() as u32);
+                        g.label_node(node.id, labels);
                         gc.add_node_to_indices(node);
                     }
                 }

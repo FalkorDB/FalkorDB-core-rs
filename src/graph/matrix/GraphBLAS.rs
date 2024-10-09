@@ -361,6 +361,7 @@ pub type FILE = __sFILE;
 pub type GxB_FC32_t = __BindgenComplex<f32>;
 pub type GxB_FC64_t = __BindgenComplex<f64>;
 pub type GrB_Index = u64;
+pub const GrB_INDEX_MAX: GrB_Index = (1u64 << 60) - 1;
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum GrB_Info {

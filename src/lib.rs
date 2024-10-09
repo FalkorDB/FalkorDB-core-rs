@@ -12,6 +12,7 @@ mod undo_log;
 
 extern "C" {
     static RedisModule_Alloc: Option<extern "C" fn(usize) -> *mut c_void>;
+    static RedisModule_Realloc: Option<extern "C" fn(*mut c_void, usize) -> *mut c_void>;
     static RedisModule_Free: Option<extern "C" fn(*mut c_void)>;
 }
 
