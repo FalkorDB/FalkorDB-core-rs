@@ -33,7 +33,7 @@ use super::matrix::{
     delta_matrix::DeltaMatrix,
     delta_matrix_iter::DeltaMatrixIter,
     sparse_matrix::SparseMatrix,
-    tensor::{Tensor, TensorIterator},
+    tensor::{Tensor, TensorIterator, TensorRangeIterator},
     GraphBLAS::GrB_BOOL,
 };
 
@@ -420,10 +420,19 @@ impl Graph {
         let policy = self.set_matrix_policy(MatrixPolicy::Nop);
 
         debug_assert!({
-            let mut v = Vec::new();
-            nodes.iter().all(|n| {
-                self.get_node_edges(n, GraphEdgeDir::Both, -1, &mut v);
-                v.is_empty()
+            nodes.iter().all(|n| unsafe {
+                for i in 0..self.relation_type_count() {
+                    let mut it: MaybeUninit<NodeEdgeIterator> = MaybeUninit::uninit();
+                    it.as_mut_ptr()
+                        .as_mut()
+                        .unwrap()
+                        .init(self, n.id, GraphEdgeDir::Both, i);
+                    let mut it = it.assume_init();
+                    if it.next().is_some() {
+                        return false;
+                    }
+                }
+                true
             })
         });
 
@@ -599,82 +608,6 @@ impl Graph {
         e.id = id;
         e.attributes = unsafe { DataBlock_GetItem(self.edges, id) } as _;
         !e.attributes.is_null()
-    }
-
-    pub fn _get_outgoing_node_edges(
-        &mut self,
-        n: &Node,
-        edge_type: i32,
-        edges: &mut Vec<Edge>,
-    ) {
-        self.get_relation_matrix(edge_type, false);
-
-        let it = self.relations[edge_type as usize].iter_range(n.id, n.id, false);
-        for (src, dest, edge_id) in it {
-            let e = Edge {
-                src_id: src,
-                dest_id: dest,
-                id: edge_id,
-                attributes: unsafe { DataBlock_GetItem(self.edges, edge_id) } as _,
-                relation_id: edge_type,
-                relationship: null_mut(),
-            };
-            debug_assert!(!e.attributes.is_null());
-            edges.push(e);
-        }
-    }
-
-    pub fn _get_incoming_node_edges(
-        &mut self,
-        n: &Node,
-        edge_type: i32,
-        edges: &mut Vec<Edge>,
-    ) {
-        self.get_relation_matrix(edge_type, false);
-
-        let it = self.relations[edge_type as usize].iter_range(n.id, n.id, true);
-        for (src, dest, edge_id) in it {
-            let e = Edge {
-                src_id: src,
-                dest_id: dest,
-                id: edge_id,
-                attributes: unsafe { DataBlock_GetItem(self.edges, edge_id) } as _,
-                relation_id: edge_type,
-                relationship: null_mut(),
-            };
-            debug_assert!(!e.attributes.is_null());
-            edges.push(e);
-        }
-    }
-
-    pub fn get_node_edges(
-        &mut self,
-        n: &Node,
-        dir: GraphEdgeDir,
-        edge_type: RelationID,
-        edges: &mut Vec<Edge>,
-    ) {
-        debug_assert!(edge_type >= -1 && edge_type < self.relations.len() as i32);
-
-        if dir == GraphEdgeDir::Outgoing || dir == GraphEdgeDir::Both {
-            if edge_type == -1 {
-                for i in 0..self.relation_type_count() {
-                    self._get_outgoing_node_edges(n, i, edges);
-                }
-            } else {
-                self._get_outgoing_node_edges(n, edge_type, edges);
-            }
-        }
-
-        if dir == GraphEdgeDir::Incoming || dir == GraphEdgeDir::Both {
-            if edge_type == -1 {
-                for i in 0..self.relation_type_count() {
-                    self._get_incoming_node_edges(n, i, edges);
-                }
-            } else {
-                self._get_incoming_node_edges(n, edge_type, edges);
-            }
-        }
     }
 
     pub fn get_node_degree(
@@ -1025,6 +958,7 @@ pub struct EdgeIterator<'a> {
     dest_id: NodeID,
     it: TensorIterator,
 }
+
 impl<'a> EdgeIterator<'a> {
     pub fn init(
         &mut self,
@@ -1070,16 +1004,89 @@ impl<'a> EdgeIterator<'a> {
     }
 }
 
+pub struct NodeEdgeIterator<'a> {
+    graph: &'a Graph,
+    r: RelationID,
+    node_id: NodeID,
+    both_dir: bool,
+    dir: GraphEdgeDir,
+    it: TensorRangeIterator<'a>,
+    depleted: bool,
+}
+
+impl<'a> NodeEdgeIterator<'a> {
+    pub fn init(
+        &'a mut self,
+        g: &'a mut Graph,
+        node_id: NodeID,
+        dir: GraphEdgeDir,
+        r: RelationID,
+    ) {
+        debug_assert!(r >= 0 && r < g.relations.len() as i32);
+        self.node_id = node_id;
+        self.r = r;
+        if g.relation_type_count() == 0 {
+            self.depleted = true;
+            return;
+        }
+        self.depleted = false;
+        if dir == GraphEdgeDir::Both {
+            self.both_dir = true;
+            self.dir = GraphEdgeDir::Outgoing;
+        } else {
+            self.both_dir = false;
+            self.dir = dir;
+        }
+        g.get_relation_matrix(r, false);
+        self.graph = g;
+        self.it = g.relations[r as usize].iter_range(
+            node_id,
+            node_id,
+            self.dir == GraphEdgeDir::Incoming,
+        );
+    }
+
+    pub fn next(&mut self) -> Option<Edge> {
+        if self.depleted {
+            return None;
+        }
+        loop {
+            if let Some((src_id, dest_id, edge_id)) = self.it.next() {
+                let mut e = Edge {
+                    src_id: src_id,
+                    dest_id: dest_id,
+                    id: 0,
+                    attributes: null_mut(),
+                    relation_id: self.r,
+                    relationship: null_mut(),
+                };
+                self.graph.get_edge(edge_id, &mut e);
+                return Some(e);
+            }
+            if self.both_dir && self.dir == GraphEdgeDir::Outgoing {
+                self.dir = GraphEdgeDir::Incoming;
+                self.it = self.graph.relations[self.r as usize].iter_range(
+                    self.node_id,
+                    self.node_id,
+                    true,
+                );
+                continue;
+            }
+            return None;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use std::ptr::null_mut;
+    use std::{mem::MaybeUninit, ptr::null_mut};
 
     use libc::c_char;
 
     use crate::{
         binding::graph::{ConfigOptionField, Config_Option_set, Edge},
         graph::{
-            graph::GraphEdgeDir,
+            graph::{GraphEdgeDir, NodeEdgeIterator},
             matrix::GraphBLAS::{
                 GrB_Mode, GrB_init, GxB_Format_Value, GxB_Global_Option_set, GxB_Option_Field,
             },
@@ -1171,7 +1178,29 @@ mod tests {
         assert_eq!(g.get_adjacency_matrix(false).nvals(), 3);
 
         let mut edges = Vec::new();
-        g.get_node_edges(&n1, GraphEdgeDir::Both, -1, &mut edges);
+        unsafe {
+            let mut it: MaybeUninit<NodeEdgeIterator> = MaybeUninit::uninit();
+            it.as_mut_ptr()
+                .as_mut()
+                .unwrap()
+                .init(&mut g, 1, GraphEdgeDir::Both, 0);
+            let mut it = it.assume_init();
+            if let Some(edge) = it.next() {
+                edges.push(edge);
+            }
+            if let Some(edge) = it.next() {
+                edges.push(edge);
+            }
+            let mut it: MaybeUninit<NodeEdgeIterator> = MaybeUninit::uninit();
+            it.as_mut_ptr()
+                .as_mut()
+                .unwrap()
+                .init(&mut g, 1, GraphEdgeDir::Both, 1);
+            let mut it = it.assume_init();
+            if let Some(edge) = it.next() {
+                edges.push(edge);
+            }
+        }
         g.delete_edges(edges.as_mut_slice());
         g.delete_nodes(&[n1]);
 

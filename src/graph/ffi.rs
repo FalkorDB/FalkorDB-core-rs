@@ -3,34 +3,20 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
-use std::{
-    mem::size_of,
-    slice::{from_raw_parts, from_raw_parts_mut},
-};
+use std::slice::{from_raw_parts, from_raw_parts_mut};
 
-use crate::{
-    binding::graph::{
-        DataBlockIterator, DataBlock_ItemIsDeleted, Edge, EdgeID, GraphEntity, LabelID, Node,
-        NodeID, RelationID,
-    },
-    RedisModule_Realloc,
+use crate::binding::graph::{
+    DataBlockIterator, DataBlock_ItemIsDeleted, Edge, EdgeID, GraphEntity, LabelID, Node, NodeID,
+    RelationID,
 };
 
 use super::{
-    graph::{EdgeIterator, Graph, GraphEdgeDir, MatrixPolicy},
+    graph::{EdgeIterator, Graph, GraphEdgeDir, MatrixPolicy, NodeEdgeIterator},
     matrix::{
         delta_matrix::DeltaMatrix,
         tensor::{Tensor, TensorRangeIterator},
     },
 };
-
-#[repr(C)]
-struct ArrayHeader {
-    len: u32,
-    cap: u32,
-    elem_sz: u32,
-    pad: u32,
-}
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -353,11 +339,11 @@ unsafe extern "C" fn Graph_GetEdge(
 unsafe extern "C" fn Graph_EdgeIteratorInit(
     g: *mut Graph,
     it: *mut EdgeIterator,
-    srcID: NodeID,
-    destID: NodeID,
+    src_id: NodeID,
+    dest_id: NodeID,
     r: RelationID,
 ) {
-    (&mut *it).init(g.as_mut().unwrap(), srcID, destID, r);
+    (&mut *it).init(g.as_mut().unwrap(), src_id, dest_id, r);
 }
 
 #[no_mangle]
@@ -371,30 +357,28 @@ unsafe extern "C" fn EdgeIterator_Next(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_GetNodeEdges(
+unsafe extern "C" fn Graph_NodeEdgeIteratorInit(
     g: *mut Graph,
-    n: *const Node,
+    it: *mut NodeEdgeIterator,
+    nodeID: NodeID,
     dir: GraphEdgeDir,
-    edge_type: RelationID,
-    edges: *mut *mut Edge,
+    r: RelationID,
 ) {
-    let mut arr_ptr = (*edges as *mut ArrayHeader).sub(1);
-    let mut arr = arr_ptr.as_mut().unwrap();
-    let mut es = Vec::with_capacity(arr.len as usize);
-    (&mut *g).get_node_edges(n.as_ref().unwrap(), dir, edge_type, &mut es);
-    if arr.cap - arr.len < es.len() as u32 {
-        arr.cap = arr.len + es.len() as u32;
-        arr_ptr = RedisModule_Realloc.unwrap()(
-            arr_ptr as _,
-            (arr.cap as usize * size_of::<Edge>() + size_of::<ArrayHeader>()) as usize,
-        ) as _;
-        edges.write(arr_ptr.add(1) as _);
-        arr = arr_ptr.as_mut().unwrap();
+    (&mut *it).init(g.as_mut().unwrap(), nodeID, dir, r);
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe extern "C" fn NodeEdgeIterator_Next(
+    it: *mut NodeEdgeIterator,
+    e: *mut Edge,
+) -> bool {
+    if let Some(edge) = (*it).next() {
+        e.write(edge);
+        true
+    } else {
+        false
     }
-    for (i, e) in es.iter().enumerate() {
-        (*edges).add(arr.len as usize + i).write(*e);
-    }
-    arr.len += es.len() as u32;
 }
 
 #[no_mangle]

@@ -316,6 +316,7 @@ pub struct TensorRangeIterator<'a> {
     transposed: bool,
     attached: bool,
 }
+
 impl<'a> TensorRangeIterator<'a> {
     fn new(
         m: &'a Tensor,

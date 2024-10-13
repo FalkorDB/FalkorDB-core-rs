@@ -496,7 +496,7 @@ impl DeltaMatrix {
             return;
         }
 
-        self.mutex.as_mut().unwrap().lock();
+        self.mutex.as_ref().unwrap().lock();
 
         if self.nrows() < nrows || self.ncols() < ncols {
             self.resize(nrows, ncols);
@@ -506,7 +506,7 @@ impl DeltaMatrix {
             self.wait(false);
         }
 
-        self.mutex.as_mut().unwrap().unlock();
+        self.mutex.as_ref().unwrap().unlock();
     }
 }
 
