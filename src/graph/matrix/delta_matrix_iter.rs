@@ -29,6 +29,21 @@ impl<'a> DeltaMatrixIter<'a> {
         }
     }
 
+    pub fn new_range(
+        m: &'a DeltaMatrix,
+        min_row: u64,
+        max_row: u64,
+    ) -> DeltaMatrixIter<'a> {
+        DeltaMatrixIter {
+            matrix: Some(m),
+            min_row: min_row,
+            max_row: max_row,
+            m_it: SparseMatrixIter::new(m.m(), min_row, max_row),
+            dp_it: SparseMatrixIter::new(m.dp(), min_row, max_row),
+            dm_it: SparseMatrixIter::new(m.dm(), min_row, max_row),
+        }
+    }
+
     /// Initialize the iterator to iterate over [`DeltaMatrix`].
     pub fn attach(
         &mut self,

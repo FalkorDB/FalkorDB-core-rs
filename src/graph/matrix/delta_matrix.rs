@@ -5,9 +5,10 @@
 
 use std::{mem::MaybeUninit, ptr::null_mut};
 
-use libc::pthread_mutex_t;
-
-use crate::binding::graph::{ConfigOptionField, Config_Option_get};
+use crate::binding::{
+    cmutex::CMutex,
+    graph::{ConfigOptionField, Config_Option_get},
+};
 
 use super::{
     sparse_matrix::SparseMatrix,
@@ -16,42 +17,6 @@ use super::{
         GrB_Scalar_new, GrB_Semiring, GrB_Type, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE, GxB_SPARSE,
     },
 };
-
-/// Wrap C mutex as we can't use Rust Mutex.
-/// Used to lock the matrix only when we apply pending changes.
-struct CMutex {
-    mutex: pthread_mutex_t,
-}
-
-impl CMutex {
-    fn new() -> Self {
-        unsafe {
-            let mut mutex = MaybeUninit::uninit();
-            libc::pthread_mutex_init(mutex.as_mut_ptr(), null_mut());
-            Self {
-                mutex: mutex.assume_init(),
-            }
-        }
-    }
-
-    fn lock(&mut self) {
-        unsafe {
-            libc::pthread_mutex_lock(&mut self.mutex);
-        }
-    }
-
-    fn unlock(&mut self) {
-        unsafe {
-            libc::pthread_mutex_unlock(&mut self.mutex);
-        }
-    }
-}
-
-impl Drop for CMutex {
-    fn drop(&mut self) {
-        unsafe { libc::pthread_mutex_destroy(&mut self.mutex) };
-    }
-}
 
 /// Delta Matrix solve the issue of writing to a sparse matrix with high number of nnz
 /// By using additional matrices with limited number of nnz
@@ -111,7 +76,12 @@ impl DeltaMatrix {
     }
 
     /// Returns the transposed of this [`DeltaMatrix`].
-    pub fn transposed(&mut self) -> Option<&mut Box<DeltaMatrix>> {
+    pub fn transposed(&self) -> Option<&Box<DeltaMatrix>> {
+        self.transposed.as_ref()
+    }
+
+    /// Returns the transposed of this [`DeltaMatrix`].
+    pub fn transposed_mut(&mut self) -> Option<&mut Box<DeltaMatrix>> {
         self.transposed.as_mut()
     }
 
@@ -128,6 +98,10 @@ impl DeltaMatrix {
     /// Returns a reference to the m of this [`DeltaMatrix`].
     pub fn m(&self) -> &SparseMatrix {
         &self.matrix
+    }
+
+    pub fn m_mut(&mut self) -> &mut SparseMatrix {
+        &mut self.matrix
     }
 
     /// Returns a reference to the delta plus of this [`DeltaMatrix`].
@@ -522,7 +496,7 @@ impl DeltaMatrix {
             return;
         }
 
-        self.mutex.as_mut().unwrap().lock();
+        self.mutex.as_ref().unwrap().lock();
 
         if self.nrows() < nrows || self.ncols() < ncols {
             self.resize(nrows, ncols);
@@ -532,7 +506,7 @@ impl DeltaMatrix {
             self.wait(false);
         }
 
-        self.mutex.as_mut().unwrap().unlock();
+        self.mutex.as_ref().unwrap().unlock();
     }
 }
 
@@ -572,7 +546,7 @@ mod tests {
         test_init();
         let nrows = 100;
         let ncols = 100;
-        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
+        let a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
         assert_eq!(a.m().nvals(), 0);
         assert_eq!(a.delta_plus.nvals(), 0);
         assert_eq!(a.delta_minus.nvals(), 0);
@@ -582,7 +556,7 @@ mod tests {
         assert!(!a.dirty);
         assert!(a.transposed().is_none());
 
-        let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
+        let a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
         assert_eq!(a.m().nvals(), 0);
         assert_eq!(a.delta_plus.nvals(), 0);
         assert_eq!(a.delta_minus.nvals(), 0);

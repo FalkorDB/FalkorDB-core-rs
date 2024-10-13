@@ -5,17 +5,23 @@
 
 use std::ffi::{c_char, c_void};
 
-pub type NodeID = i64;
-pub type EntityID = i64;
+use crate::graph::graph::Graph;
+
+pub type NodeID = u64;
+pub type EdgeID = u64;
+pub type EntityID = u64;
 pub type LabelID = i32;
 pub type SchemaID = i32;
 pub type RelationID = i32;
 pub type AttributeID = i32;
 pub type AttributeSet = *mut c_void;
-pub type Graph = c_void;
 pub type GraphContext = c_void;
 
+pub type DataBlock = c_void;
+pub type DataBlockIterator = c_void;
+
 #[repr(C)]
+#[allow(dead_code)]
 #[derive(Copy, Clone, PartialEq)]
 pub enum SchemaType {
     Node,
@@ -23,6 +29,7 @@ pub enum SchemaType {
 }
 
 #[repr(C)]
+#[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub enum IndexFieldType {
     Unknown = 0x00,
@@ -54,6 +61,13 @@ impl Node {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub struct GraphEntity {
+    pub attributes: *mut AttributeSet,
+    pub id: EntityID,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct Edge {
     pub attributes: *mut AttributeSet,
     pub id: EntityID,
@@ -76,70 +90,46 @@ impl Edge {
 }
 
 #[repr(C)]
+#[allow(dead_code)]
+#[allow(non_camel_case_types)]
 pub enum ConfigOptionField {
-    TIMEOUT = 0,                    // timeout value for queries
-    TIMEOUT_DEFAULT = 1,            // default timeout for read and write queries
-    TIMEOUT_MAX = 2,                // max timeout that can be enforced
-    CACHE_SIZE = 3,                 // number of entries in cache
-    ASYNC_DELETE = 4,               // delete graph asynchronously
-    OPENMP_NTHREAD = 5,             // max number of OpenMP threads to use
-    THREAD_POOL_SIZE = 6,           // number of threads in thread pool
-    RESULTSET_MAX_SIZE = 7,         // max number of records in result-set
-    VKEY_MAX_ENTITY_COUNT = 8,      // max number of elements in vkey
-    MAX_QUEUED_QUERIES = 9,         // max number of queued queries
-    QUERY_MEM_CAPACITY = 10, // max mem(bytes) that query/thread can utilize at any given time
-    DELTA_MAX_PENDING_CHANGES = 11, // number of pending changes before Delta_Matrix flushed
-    NODE_CREATION_BUFFER = 12, // size of buffer to maintain as margin in matrices
-    CMD_INFO = 13,           // toggle on/off the GRAPH.INFO
-    CMD_INFO_MAX_QUERY_COUNT = 14, // the max number of info queries count
-    EFFECTS_THRESHOLD = 15,  // bolt protocol port
-    BOLT_PORT = 16,          // replicate queries via effects
+    /// timeout value for queries
+    TIMEOUT = 0,
+    /// default timeout for read and write queries
+    TIMEOUT_DEFAULT = 1,
+    /// max timeout that can be enforced
+    TIMEOUT_MAX = 2,
+    /// number of entries in cache
+    CACHE_SIZE = 3,
+    /// delete graph asynchronously
+    ASYNC_DELETE = 4,
+    // max number of OpenMP threads to use
+    OPENMP_NTHREAD = 5,
+    /// number of threads in thread pool
+    THREAD_POOL_SIZE = 6,
+    /// max number of records in result-set
+    RESULTSET_MAX_SIZE = 7,
+    /// max number of elements in vkey
+    VKEY_MAX_ENTITY_COUNT = 8,
+    /// max number of queued queries
+    MAX_QUEUED_QUERIES = 9,
+    /// max mem(bytes) that query/thread can utilize at any given time       
+    QUERY_MEM_CAPACITY = 10,
+    /// number of pending changes before Delta_Matrix flushed
+    DELTA_MAX_PENDING_CHANGES = 11,
+    /// size of buffer to maintain as margin in matrices
+    NODE_CREATION_BUFFER = 12,
+    /// toggle on/off the GRAPH.INFO
+    CMD_INFO = 13,
+    /// the max number of info queries count
+    CMD_INFO_MAX_QUERY_COUNT = 14,
+    /// bolt protocol port
+    EFFECTS_THRESHOLD = 15,
+    /// replicate queries via effects
+    BOLT_PORT = 16,
 }
 
 extern "C" {
-    fn Graph_CreateNode(
-        g: *mut Graph,
-        n: *mut Node,
-        labels: *mut LabelID,
-        label_count: u32,
-    );
-    fn Graph_CreateEdge(
-        g: *mut Graph,
-        src: NodeID,
-        dest: NodeID,
-        r: RelationID,
-        e: *mut Edge,
-    );
-    fn Graph_DeleteNodes(
-        g: *mut Graph,
-        nodes: *mut Node,
-        count: u64,
-    );
-    fn Graph_DeleteEdges(
-        g: *mut Graph,
-        edges: *mut Edge,
-        count: u64,
-    );
-    fn Graph_LabelNode(
-        g: *mut Graph,
-        id: NodeID,
-        lbls: *mut LabelID,
-        lbl_count: u32,
-    );
-    fn Graph_RemoveNodeLabels(
-        g: *mut Graph,
-        id: NodeID,
-        lbls: *mut LabelID,
-        lbl_count: u32,
-    );
-    fn Graph_RemoveLabel(
-        g: *mut Graph,
-        label_id: LabelID,
-    );
-    fn Graph_RemoveRelation(
-        g: *mut Graph,
-        relation_id: RelationID,
-    );
     fn GraphContext_GetGraph(gc: *mut GraphContext) -> *mut Graph;
     fn GraphContext_RemoveSchema(
         gc: *mut GraphContext,
@@ -180,93 +170,63 @@ extern "C" {
         field: ConfigOptionField,
         ...
     ) -> bool;
+    #[allow(dead_code)]
     pub fn Config_Option_set(
         field: ConfigOptionField,
         val: *const c_char,
         err: *mut *mut c_char,
     ) -> bool;
-}
-
-pub struct GraphAPI {
-    pub graph: *mut Graph,
-}
-
-impl GraphAPI {
-    pub fn create_node(
-        &mut self,
-        n: *mut Node,
-        labels: *mut LabelID,
-        label_count: u32,
-    ) {
-        unsafe {
-            Graph_CreateNode(self.graph, n, labels, label_count);
-        }
-    }
-    pub fn create_edge(
-        &mut self,
-        src: NodeID,
-        dest: NodeID,
-        r: RelationID,
-        e: *mut Edge,
-    ) {
-        unsafe {
-            Graph_CreateEdge(self.graph, src, dest, r, e);
-        }
-    }
-    pub fn delete_nodes(
-        &mut self,
-        nodes: *mut Node,
-        count: u64,
-    ) {
-        unsafe {
-            Graph_DeleteNodes(self.graph, nodes, count);
-        }
-    }
-    pub fn delete_edges(
-        &mut self,
-        edges: *mut Edge,
-        count: u64,
-    ) {
-        unsafe {
-            Graph_DeleteEdges(self.graph, edges, count);
-        }
-    }
-    pub fn label_node(
-        &mut self,
-        id: NodeID,
-        lbls: *mut LabelID,
-        lbl_count: u32,
-    ) {
-        unsafe {
-            Graph_LabelNode(self.graph, id, lbls, lbl_count);
-        }
-    }
-    pub fn remove_node_labels(
-        &mut self,
-        id: NodeID,
-        lbls: *mut LabelID,
-        lbl_count: u32,
-    ) {
-        unsafe {
-            Graph_RemoveNodeLabels(self.graph, id, lbls, lbl_count);
-        }
-    }
-    pub fn remove_label(
-        &mut self,
-        label_id: LabelID,
-    ) {
-        unsafe {
-            Graph_RemoveLabel(self.graph, label_id);
-        }
-    }
-    pub fn remove_relation(
-        &mut self,
-        relation_id: RelationID,
-    ) {
-        unsafe {
-            Graph_RemoveRelation(self.graph, relation_id);
-        }
-    }
+    pub fn DataBlock_New(
+        blockCap: u64,
+        itemCap: u64,
+        itemSize: u32,
+        fp: unsafe extern "C" fn(*mut c_void),
+    ) -> *mut DataBlock;
+    pub fn DataBlock_ItemCap(dataBlock: *const DataBlock) -> u64;
+    pub fn DataBlock_DeletedItemsCount(dataBlock: *const DataBlock) -> u32;
+    pub fn DataBlock_ItemCount(dataBlock: *const DataBlock) -> u64;
+    pub fn DataBlock_Accommodate(
+        dataBlock: *mut DataBlock,
+        k: i64,
+    );
+    pub fn DataBlock_GetReservedIdx(
+        dataBlock: *const DataBlock,
+        n: u64,
+    ) -> u64;
+    pub fn DataBlock_AllocateItem(
+        dataBlock: *mut DataBlock,
+        idx: *mut u64,
+    ) -> *mut c_void;
+    pub fn DataBlock_DeleteItem(
+        dataBlock: *mut DataBlock,
+        idx: u64,
+    );
+    pub fn DataBlock_ItemIsDeleted(item: *mut c_void) -> bool;
+    pub fn DataBlock_GetItem(
+        dataBlock: *const DataBlock,
+        idx: u64,
+    ) -> *mut c_void;
+    pub fn DataBlock_Scan(dataBlock: *const DataBlock) -> *mut DataBlockIterator;
+    pub fn DataBlock_Ensure(
+        dataBlock: *const DataBlock,
+        idx: u64,
+    );
+    pub fn DataBlock_MarkAsDeletedOutOfOrder(
+        dataBlock: *const DataBlock,
+        idx: u64,
+    );
+    pub fn DataBlock_AllocateItemOutOfOrder(
+        dataBlock: *const DataBlock,
+        idx: u64,
+    ) -> *mut c_void;
+    pub fn DataBlock_DeletedItems(dataBlock: *const DataBlock) -> *mut u64;
+    pub fn DataBlock_FullScan(dataBlock: *const DataBlock) -> *mut DataBlockIterator;
+    pub fn DataBlock_Free(dataBlock: *const DataBlock);
+    pub fn DataBlockIterator_Next(
+        iter: *mut DataBlockIterator,
+        id: *mut u64,
+    ) -> *mut c_void;
+    pub fn DataBlockIterator_Free(iter: *mut DataBlockIterator);
 }
 
 pub struct GraphContextAPI {
@@ -274,12 +234,8 @@ pub struct GraphContextAPI {
 }
 
 impl GraphContextAPI {
-    pub fn get_graph(&self) -> GraphAPI {
-        unsafe {
-            GraphAPI {
-                graph: GraphContext_GetGraph(self.context),
-            }
-        }
+    pub fn get_graph(&self) -> &mut Graph {
+        unsafe { GraphContext_GetGraph(self.context).as_mut().unwrap() }
     }
 
     pub fn remove_schema(
