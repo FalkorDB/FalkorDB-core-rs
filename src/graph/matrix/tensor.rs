@@ -243,7 +243,7 @@ impl Tensor {
         id: u64,
     ) -> u64 {
         let mut degree = 0;
-        let mut it = DeltaMatrixIter::new_range(&self.m, id, id);
+        let mut it = DeltaMatrixIter::new_range(&self.m, id, id, false);
         while let Ok(Some((_, _, id))) = it.next_u64() {
             if single_edge(id) {
                 degree += 1;
@@ -264,7 +264,7 @@ impl Tensor {
         id: u64,
     ) -> u64 {
         let mut degree = 0;
-        let mut it = DeltaMatrixIter::new_range(self.m.transposed().unwrap(), id, id);
+        let mut it = DeltaMatrixIter::new_range(&self.m, id, id, true);
         while let Ok(Some((dest, src))) = it.next_bool() {
             let id = self.m.extract_element_u64(src, dest).unwrap();
             if single_edge(id) {
@@ -324,14 +324,11 @@ impl<'a> TensorRangeIterator<'a> {
         max_src_id: u64,
         transposed: bool,
     ) -> Self {
-        let r = if transposed {
-            m.m.transposed().unwrap()
-        } else {
-            &m.m
-        };
         Self {
             m,
-            rit: Some(DeltaMatrixIter::new_range(r, min_src_id, max_src_id)),
+            rit: Some(DeltaMatrixIter::new_range(
+                &m.m, min_src_id, max_src_id, transposed,
+            )),
             eit: None,
             src_id: min_src_id,
             dest_id: u64::MAX,
@@ -348,7 +345,10 @@ impl<'a> TensorRangeIterator<'a> {
         if !self.attached {
             return false;
         }
-        ptr::eq(self.m.m.m().grb_matrix_ref(), other.m.m().grb_matrix_ref())
+        ptr::eq(
+            self.m.m.m(false).grb_matrix_ref(),
+            other.m.m(false).grb_matrix_ref(),
+        )
     }
 }
 

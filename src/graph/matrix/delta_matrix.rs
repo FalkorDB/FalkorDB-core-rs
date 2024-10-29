@@ -13,10 +13,17 @@ use crate::binding::{
 use super::{
     sparse_matrix::SparseMatrix,
     GraphBLAS::{
-        GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_Scalar_free,
-        GrB_Scalar_new, GrB_Semiring, GrB_Type, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE, GxB_SPARSE,
+        GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_DESC_T1,
+        GrB_Descriptor, GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type, GxB_ANY_PAIR_BOOL,
+        GxB_HYPERSPARSE, GxB_SPARSE,
     },
 };
+
+struct DeltaMatrixBase {
+    pub matrix: SparseMatrix,
+    pub delta_plus: SparseMatrix,
+    pub delta_minus: SparseMatrix,
+}
 
 /// Delta Matrix solve the issue of writing to a sparse matrix with high number of nnz
 /// By using additional matrices with limited number of nnz
@@ -25,11 +32,9 @@ use super::{
 /// delta_minus recent m deletions
 pub struct DeltaMatrix {
     dirty: bool,
-    matrix: SparseMatrix,
-    delta_plus: SparseMatrix,
-    delta_minus: SparseMatrix,
-    transposed: Option<Box<DeltaMatrix>>,
-    mutex: Option<CMutex>,
+    matrix: DeltaMatrixBase,
+    transpose: Option<DeltaMatrixBase>,
+    mutex: CMutex,
 }
 
 impl DeltaMatrix {
@@ -43,90 +48,99 @@ impl DeltaMatrix {
         unsafe {
             let mut x = Self {
                 dirty: false,
-                matrix: SparseMatrix::new(ty, nrows, ncols),
-                delta_plus: SparseMatrix::new(ty, nrows, ncols),
-                delta_minus: SparseMatrix::new(GrB_BOOL, nrows, ncols),
-                transposed: if transpose {
-                    let mut t = Box::new(Self {
-                        dirty: false,
+                matrix: DeltaMatrixBase {
+                    matrix: SparseMatrix::new(ty, nrows, ncols),
+                    delta_plus: SparseMatrix::new(ty, nrows, ncols),
+                    delta_minus: SparseMatrix::new(GrB_BOOL, nrows, ncols),
+                },
+                transpose: if transpose {
+                    Some(DeltaMatrixBase {
                         matrix: SparseMatrix::new(GrB_BOOL, ncols, nrows),
                         delta_plus: SparseMatrix::new(GrB_BOOL, ncols, nrows),
                         delta_minus: SparseMatrix::new(GrB_BOOL, ncols, nrows),
-                        transposed: None,
-                        mutex: None,
-                    });
-                    t.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
-                    t.delta_plus.set_sparsity(GxB_HYPERSPARSE);
-                    t.delta_plus.set_always_hyper();
-                    t.delta_minus.set_sparsity(GxB_HYPERSPARSE);
-                    t.delta_minus.set_always_hyper();
-                    Some(t)
+                    })
                 } else {
                     None
                 },
-                mutex: Some(CMutex::new()),
+                mutex: CMutex::new(),
             };
-            x.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
-            x.delta_plus.set_sparsity(GxB_HYPERSPARSE);
-            x.delta_plus.set_always_hyper();
-            x.delta_minus.set_sparsity(GxB_HYPERSPARSE);
-            x.delta_minus.set_always_hyper();
+            x.matrix.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
+            x.matrix.delta_plus.set_sparsity(GxB_HYPERSPARSE);
+            x.matrix.delta_plus.set_always_hyper();
+            x.matrix.delta_minus.set_sparsity(GxB_HYPERSPARSE);
+            x.matrix.delta_minus.set_always_hyper();
+            if let Some(x) = x.transpose.as_mut() {
+                x.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
+                x.delta_plus.set_sparsity(GxB_HYPERSPARSE);
+                x.delta_plus.set_always_hyper();
+                x.delta_minus.set_sparsity(GxB_HYPERSPARSE);
+                x.delta_minus.set_always_hyper();
+            }
             x
         }
     }
 
-    /// Returns the transposed of this [`DeltaMatrix`].
-    pub fn transposed(&self) -> Option<&Box<DeltaMatrix>> {
-        self.transposed.as_ref()
-    }
-
-    /// Returns the transposed of this [`DeltaMatrix`].
-    pub fn transposed_mut(&mut self) -> Option<&mut Box<DeltaMatrix>> {
-        self.transposed.as_mut()
-    }
-
-    fn set_dirty(
-        &mut self,
-        dirty: bool,
-    ) {
-        self.dirty = dirty;
-        if let Some(t) = self.transposed.as_mut() {
-            t.set_dirty(dirty);
+    /// Returns a reference to the m of this [`DeltaMatrix`].
+    pub fn m(
+        &self,
+        transpose: bool,
+    ) -> &SparseMatrix {
+        if transpose {
+            &self.transpose.as_ref().unwrap().matrix
+        } else {
+            &self.matrix.matrix
         }
     }
 
-    /// Returns a reference to the m of this [`DeltaMatrix`].
-    pub fn m(&self) -> &SparseMatrix {
-        &self.matrix
-    }
-
-    pub fn m_mut(&mut self) -> &mut SparseMatrix {
-        &mut self.matrix
+    pub fn m_mut(
+        &mut self,
+        transpose: bool,
+    ) -> &mut SparseMatrix {
+        if transpose {
+            &mut self.transpose.as_mut().unwrap().matrix
+        } else {
+            &mut self.matrix.matrix
+        }
     }
 
     /// Returns a reference to the delta plus of this [`DeltaMatrix`].
-    pub fn dp(&self) -> &SparseMatrix {
-        &self.delta_plus
+    pub fn dp(
+        &self,
+        transpose: bool,
+    ) -> &SparseMatrix {
+        if transpose {
+            &self.transpose.as_ref().unwrap().delta_plus
+        } else {
+            &self.matrix.delta_plus
+        }
     }
 
     /// Returns a reference to the delta minus of this [`DeltaMatrix`].
-    pub fn dm(&self) -> &SparseMatrix {
-        &self.delta_minus
+    pub fn dm(
+        &self,
+        transpose: bool,
+    ) -> &SparseMatrix {
+        if transpose {
+            &self.transpose.as_ref().unwrap().delta_minus
+        } else {
+            &self.matrix.delta_minus
+        }
     }
 
     /// Returns the number of rows of this [`DeltaMatrix`].
     pub fn nrows(&self) -> u64 {
-        self.matrix.nrows()
+        self.matrix.matrix.nrows()
     }
 
     /// Returns the number of columns of this [`DeltaMatrix`].
     pub fn ncols(&self) -> u64 {
-        self.matrix.ncols()
+        self.matrix.matrix.ncols()
     }
 
     /// Returns the number of non zero values of this [`DeltaMatrix`].
     pub fn nvals(&self) -> u64 {
-        self.matrix.nvals() + self.delta_plus.nvals() - self.delta_minus.nvals()
+        self.matrix.matrix.nvals() + self.matrix.delta_plus.nvals()
+            - self.matrix.delta_minus.nvals()
     }
 
     /// Resize the [`DeltaMatrix`].
@@ -135,12 +149,15 @@ impl DeltaMatrix {
         nrows_new: u64,
         ncols_new: u64,
     ) {
-        if let Some(t) = self.transposed.as_mut() {
-            t.resize(ncols_new, nrows_new);
+        if let Some(t) = self.transpose.as_mut() {
+            t.matrix.resize(ncols_new, nrows_new);
+            t.delta_plus.resize(ncols_new, nrows_new);
+            t.delta_minus.resize(ncols_new, nrows_new);
         }
-        self.matrix.resize(nrows_new, ncols_new);
-        self.delta_plus.resize(nrows_new, ncols_new);
-        self.delta_minus.resize(nrows_new, ncols_new);
+
+        self.matrix.matrix.resize(nrows_new, ncols_new);
+        self.matrix.delta_plus.resize(nrows_new, ncols_new);
+        self.matrix.delta_minus.resize(nrows_new, ncols_new);
     }
 
     /// Remove element from this [`DeltaMatrix`].
@@ -149,17 +166,19 @@ impl DeltaMatrix {
         i: u64,
         j: u64,
     ) {
-        if let Some(t) = self.transposed.as_mut() {
-            t.remove_element(j, i);
-        }
-
         // if the value presented in m set dm otherwise remove from dp
-        if self.matrix.extract_element_bool(i, j).is_some() {
-            self.delta_minus.set_element_bool(true, i, j);
+        if self.matrix.matrix.extract_element_bool(i, j).is_some() {
+            self.matrix.delta_minus.set_element_bool(true, i, j);
+            if let Some(t) = self.transpose.as_mut() {
+                t.delta_minus.set_element_bool(true, j, i);
+            }
         } else {
-            self.delta_plus.remove_element(i, j);
+            self.matrix.delta_plus.remove_element(i, j);
+            if let Some(t) = self.transpose.as_mut() {
+                t.delta_plus.remove_element(j, i);
+            }
         }
-        self.set_dirty(true);
+        self.dirty = true;
     }
 
     /// Sets the element of this [`DeltaMatrix`].
@@ -168,18 +187,20 @@ impl DeltaMatrix {
         i: u64,
         j: u64,
     ) {
-        if let Some(t) = self.transposed.as_mut() {
-            t.set_element_bool(j, i);
-        }
-
         // if the value marked as deleted in dm remove it
         // otherwise if it is not presented in m set it in dp
-        if self.delta_minus.extract_element_bool(i, j).is_some() {
-            self.delta_minus.remove_element(i, j);
-            self.set_dirty(true);
-        } else if self.matrix.extract_element_bool(i, j).is_none() {
-            self.delta_plus.set_element_bool(true, i, j);
-            self.set_dirty(true);
+        if self.matrix.delta_minus.extract_element_bool(i, j).is_some() {
+            self.matrix.delta_minus.remove_element(i, j);
+            if let Some(t) = self.transpose.as_mut() {
+                t.delta_minus.remove_element(j, i);
+            }
+            self.dirty = true;
+        } else if self.matrix.matrix.extract_element_bool(i, j).is_none() {
+            self.matrix.delta_plus.set_element_bool(true, i, j);
+            if let Some(t) = self.transpose.as_mut() {
+                t.delta_plus.set_element_bool(true, j, i);
+            }
+            self.dirty = true;
         }
     }
 
@@ -190,21 +211,27 @@ impl DeltaMatrix {
         i: u64,
         j: u64,
     ) {
-        if let Some(t) = self.transposed.as_mut() {
-            t.set_element_bool(j, i);
-        }
-
         // if the value marked as deleted in dm remove it
         // otherwise if it is not presented in m set it in dp
-        if self.delta_minus.extract_element_bool(i, j).is_some() {
-            self.delta_minus.remove_element(i, j);
-            self.matrix.set_element_u64(x, i, j);
-            self.set_dirty(true);
-        } else if self.matrix.extract_element_u64(i, j).is_none() {
-            self.delta_plus.set_element_u64(x, i, j);
-            self.set_dirty(true);
+        if self.matrix.delta_minus.extract_element_bool(i, j).is_some() {
+            self.matrix.delta_minus.remove_element(i, j);
+            self.matrix.matrix.set_element_u64(x, i, j);
+            if let Some(t) = self.transpose.as_mut() {
+                t.delta_minus.remove_element(j, i);
+                t.matrix.set_element_bool(true, j, i);
+            }
+            self.dirty = true;
+        } else if self.matrix.matrix.extract_element_u64(i, j).is_none() {
+            self.matrix.delta_plus.set_element_u64(x, i, j);
+            if let Some(t) = self.transpose.as_mut() {
+                t.delta_plus.set_element_bool(true, j, i);
+            }
+            self.dirty = true;
         } else {
-            self.matrix.set_element_u64(x, i, j);
+            self.matrix.matrix.set_element_u64(x, i, j);
+            if let Some(t) = self.transpose.as_mut() {
+                t.matrix.set_element_bool(true, j, i);
+            }
         }
     }
 
@@ -217,12 +244,12 @@ impl DeltaMatrix {
         // if the value presented in dp return true
         // if it is deleted in dm return no value
         // otherwise return it from m
-        if self.delta_plus.extract_element_bool(i, j).is_some() {
+        if self.matrix.delta_plus.extract_element_bool(i, j).is_some() {
             Some(true)
-        } else if self.delta_minus.extract_element_bool(i, j).is_some() {
+        } else if self.matrix.delta_minus.extract_element_bool(i, j).is_some() {
             None
         } else {
-            self.matrix.extract_element_bool(i, j)
+            self.matrix.matrix.extract_element_bool(i, j)
         }
     }
 
@@ -235,12 +262,12 @@ impl DeltaMatrix {
         // if the value presented in dp return true
         // if it is deleted in dm return no value
         // otherwise return it from m
-        if let Some(v) = self.delta_plus.extract_element_u64(i, j) {
+        if let Some(v) = self.matrix.delta_plus.extract_element_u64(i, j) {
             Some(v)
-        } else if self.delta_minus.extract_element_bool(i, j).is_some() {
+        } else if self.matrix.delta_minus.extract_element_bool(i, j).is_some() {
             None
         } else {
-            self.matrix.extract_element_u64(i, j)
+            self.matrix.matrix.extract_element_u64(i, j)
         }
     }
 
@@ -249,13 +276,13 @@ impl DeltaMatrix {
         &mut self,
         mask: &SparseMatrix,
     ) {
-        debug_assert!(self.transposed.is_none());
+        debug_assert!(self.transpose.is_none());
 
         unsafe {
             let mut s = MaybeUninit::uninit();
             GrB_Scalar_new(s.as_mut_ptr(), GrB_BOOL);
             // delete all presented elements in dp
-            self.delta_plus.assign_scalar(
+            self.matrix.delta_plus.assign_scalar(
                 mask,
                 s.assume_init(),
                 GrB_ALL,
@@ -265,28 +292,28 @@ impl DeltaMatrix {
                 GrB_DESC_S,
             );
             // delete elements presented in m  by marking them as deleted in dm
-            self.delta_minus.assign(
+            self.matrix.delta_minus.assign(
                 mask,
-                &self.matrix,
+                &self.matrix.matrix,
                 GrB_ALL,
                 self.nrows(),
                 GrB_ALL,
                 self.ncols(),
                 GrB_DESC_S,
             );
-            self.set_dirty(true);
+            self.dirty = true;
             GrB_Scalar_free(s.as_mut_ptr());
         }
     }
 
     /// Clear this [`DeltaMatrix`].
     pub fn clear(&mut self) {
-        debug_assert!(self.transposed.is_none());
+        debug_assert!(self.transpose.is_none());
 
-        self.matrix.clear();
-        self.delta_plus.clear();
-        self.delta_minus.clear();
-        self.set_dirty(true);
+        self.matrix.matrix.clear();
+        self.matrix.delta_plus.clear();
+        self.matrix.delta_minus.clear();
+        self.dirty = false;
     }
 
     /// Copy this [`DeltaMatrix`].
@@ -294,11 +321,11 @@ impl DeltaMatrix {
         &mut self,
         a: &DeltaMatrix,
     ) {
-        debug_assert!(self.transposed.is_none());
+        debug_assert!(self.transpose.is_none());
 
-        self.matrix.copy(&a.matrix);
-        self.delta_plus.copy(&a.delta_plus);
-        self.delta_minus.copy(&a.delta_minus);
+        self.matrix.matrix.copy(&a.matrix.matrix);
+        self.matrix.delta_plus.copy(&a.matrix.delta_plus);
+        self.matrix.delta_minus.copy(&a.matrix.delta_minus);
     }
 
     /// Multiply m by n and the result is in this [`DeltaMatrix`].
@@ -307,13 +334,19 @@ impl DeltaMatrix {
         semiring: GrB_Semiring,
         m: &DeltaMatrix,
         n: &DeltaMatrix,
+        desc: GrB_Descriptor,
     ) {
         unsafe {
+            let n = if desc == GrB_DESC_T1 && n.transpose.is_some() {
+                n.transpose.as_ref().unwrap()
+            } else {
+                &n.matrix
+            };
             let (mask, desc) = if n.delta_minus.nvals() > 0 {
                 let mut mask = SparseMatrix::new(GrB_BOOL, self.nrows(), self.ncols());
                 mask.mxm(
                     None,
-                    &m.matrix,
+                    &m.matrix.matrix,
                     &n.delta_minus,
                     GxB_ANY_PAIR_BOOL,
                     null_mut(),
@@ -329,7 +362,7 @@ impl DeltaMatrix {
 
             let accum = if n.delta_plus.nvals() > 0 {
                 let mut accum = SparseMatrix::new(GrB_BOOL, self.nrows(), self.ncols());
-                accum.mxm(None, &m.matrix, &n.delta_plus, semiring, null_mut());
+                accum.mxm(None, &m.matrix.matrix, &n.delta_plus, semiring, null_mut());
                 if accum.nvals() > 0 {
                     Some(accum)
                 } else {
@@ -340,9 +373,11 @@ impl DeltaMatrix {
             };
 
             self.matrix
-                .mxm(mask.as_ref(), &m.matrix, &n.matrix, semiring, desc);
+                .matrix
+                .mxm(mask.as_ref(), &m.matrix.matrix, &n.matrix, semiring, desc);
             if let Some(accum) = accum {
                 self.matrix
+                    .matrix
                     .element_wise_add(None, None, Some(&accum), GxB_ANY_PAIR_BOOL);
             }
         }
@@ -354,47 +389,67 @@ impl DeltaMatrix {
         semiring: GrB_Semiring,
         m: &DeltaMatrix,
         n: &DeltaMatrix,
+        desc: GrB_Descriptor,
     ) {
         match (
-            m.delta_minus.nvals() > 0 || m.delta_plus.nvals() > 0,
-            n.delta_minus.nvals() > 0 || n.delta_plus.nvals() > 0,
+            m.matrix.delta_minus.nvals() > 0 || m.matrix.delta_plus.nvals() > 0,
+            n.matrix.delta_minus.nvals() > 0 || n.matrix.delta_plus.nvals() > 0,
         ) {
             (true, true) => {
-                self.matrix
-                    .element_wise_add(None, Some(&m.export()), Some(&n.export()), semiring);
+                self.matrix.matrix.element_wise_add(
+                    None,
+                    Some(&m.export(false)),
+                    Some(&n.export(desc == unsafe { GrB_DESC_T1 })),
+                    semiring,
+                );
             }
             (true, false) => {
-                self.matrix
-                    .element_wise_add(None, Some(&m.export()), Some(&n.matrix), semiring);
+                self.matrix.matrix.element_wise_add(
+                    None,
+                    Some(&m.export(false)),
+                    Some(n.m(desc == unsafe { GrB_DESC_T1 })),
+                    semiring,
+                );
             }
             (false, true) => {
-                self.matrix
-                    .element_wise_add(None, Some(&m.matrix), Some(&n.export()), semiring);
+                self.matrix.matrix.element_wise_add(
+                    None,
+                    Some(&m.matrix.matrix),
+                    Some(&n.export(desc == unsafe { GrB_DESC_T1 })),
+                    semiring,
+                );
             }
             (false, false) => {
-                self.matrix
-                    .element_wise_add(None, Some(&m.matrix), Some(&n.matrix), semiring);
+                self.matrix.matrix.element_wise_add(
+                    None,
+                    Some(&m.matrix.matrix),
+                    Some(n.m(desc == unsafe { GrB_DESC_T1 })),
+                    semiring,
+                );
             }
         }
     }
 
     /// Returns [`SparseMatrix`] by computing m-dm+dp of this [`DeltaMatrix`].
-    pub fn export(&self) -> SparseMatrix {
-        let mut m = SparseMatrix::new(unsafe { GrB_BOOL }, self.nrows(), self.ncols());
-        if self.delta_minus.nvals() > 0 {
-            m.transpose(
-                Some(&self.delta_minus),
-                null_mut(),
-                Some(&self.matrix),
-                unsafe { GrB_DESC_RSCT0 },
-            );
+    pub fn export(
+        &self,
+        transpose: bool,
+    ) -> SparseMatrix {
+        let s = if transpose {
+            self.transpose.as_ref().unwrap()
         } else {
-            m.transpose(None, null_mut(), Some(&self.matrix), unsafe {
-                GrB_DESC_RT0
+            &self.matrix
+        };
+        let mut m = SparseMatrix::new(unsafe { GrB_BOOL }, self.nrows(), self.ncols());
+        if s.delta_minus.nvals() > 0 {
+            m.transpose(Some(&s.delta_minus), null_mut(), Some(&s.matrix), unsafe {
+                GrB_DESC_RSCT0
             });
+        } else {
+            m.transpose(None, null_mut(), Some(&s.matrix), unsafe { GrB_DESC_RT0 });
         }
-        if self.delta_plus.nvals() > 0 {
-            m.element_wise_add(None, None, Some(&self.delta_plus), unsafe {
+        if s.delta_plus.nvals() > 0 {
+            m.element_wise_add(None, None, Some(&s.delta_plus), unsafe {
                 GxB_ANY_PAIR_BOOL
             });
         }
@@ -404,16 +459,9 @@ impl DeltaMatrix {
 
     /// Returns if there are pending changes in this [`DeltaMatrix`].
     pub fn pending(&self) -> bool {
-        if self
-            .transposed
-            .as_ref()
-            .map(|t| t.pending())
-            .unwrap_or_default()
-        {
-            return true;
-        }
-
-        self.matrix.pending() || self.delta_plus.pending() || self.delta_minus.pending()
+        self.matrix.matrix.pending()
+            || self.matrix.delta_plus.pending()
+            || self.matrix.delta_minus.pending()
     }
 
     /// Apply pending changes on this [`DeltaMatrix`].
@@ -423,10 +471,6 @@ impl DeltaMatrix {
         &mut self,
         force_sync: bool,
     ) {
-        if let Some(t) = self.transposed.as_mut() {
-            t.wait(force_sync);
-        }
-
         let mut delta_max_pending_changes = MaybeUninit::uninit();
         unsafe {
             Config_Option_get(
@@ -437,7 +481,7 @@ impl DeltaMatrix {
         let delta_max_pending_changes = unsafe { delta_max_pending_changes.assume_init() };
 
         self.sync(force_sync, delta_max_pending_changes);
-        self.set_dirty(false);
+        self.dirty = false;
     }
 
     fn sync(
@@ -449,41 +493,71 @@ impl DeltaMatrix {
             self.sync_deletions();
             self.sync_additions();
         } else {
-            if self.delta_minus.nvals() > delta_max_pending_changes {
+            if self.matrix.delta_minus.nvals() > delta_max_pending_changes {
                 self.sync_deletions();
             }
 
-            if self.delta_plus.nvals() > delta_max_pending_changes {
+            if self.matrix.delta_plus.nvals() > delta_max_pending_changes {
                 self.sync_additions();
             }
         }
 
-        self.matrix.wait();
-        self.delta_plus.wait();
-        self.delta_minus.wait();
+        self.matrix.matrix.wait();
+        self.matrix.delta_plus.wait();
+        self.matrix.delta_minus.wait();
+        if let Some(t) = self.transpose.as_mut() {
+            t.matrix.wait();
+            t.delta_plus.wait();
+            t.delta_minus.wait();
+        }
     }
 
     fn sync_deletions(&mut self) {
         self.matrix
-            .transpose(Some(&self.delta_minus), null_mut(), None, unsafe {
+            .matrix
+            .transpose(Some(&self.matrix.delta_minus), null_mut(), None, unsafe {
                 GrB_DESC_RSCT0
             });
-        self.delta_minus.clear();
+        self.matrix.delta_minus.clear();
+        if let Some(t) = self.transpose.as_mut() {
+            t.matrix
+                .transpose(Some(&t.delta_minus), null_mut(), None, unsafe {
+                    GrB_DESC_RSCT0
+                });
+            t.delta_minus.clear();
+        }
     }
 
     fn sync_additions(&mut self) {
+        let nrows = self.nrows();
+        let ncols = self.ncols();
         unsafe {
-            self.matrix.assign(
-                &self.delta_plus,
-                &self.delta_plus,
+            self.matrix.matrix.assign(
+                &self.matrix.delta_plus,
+                &self.matrix.delta_plus,
                 GrB_ALL,
-                self.nrows(),
+                nrows,
                 GrB_ALL,
-                self.ncols(),
+                ncols,
                 GrB_DESC_S,
             );
         }
-        self.delta_plus.clear();
+        self.matrix.delta_plus.clear();
+
+        if let Some(t) = self.transpose.as_mut() {
+            unsafe {
+                t.matrix.assign(
+                    &t.delta_plus,
+                    &t.delta_plus,
+                    GrB_ALL,
+                    ncols,
+                    GrB_ALL,
+                    nrows,
+                    GrB_DESC_S,
+                );
+            }
+            t.delta_plus.clear();
+        }
     }
 
     /// Check if need to resize or to apply pending changes on this [`DeltaMatrix`].
@@ -496,7 +570,7 @@ impl DeltaMatrix {
             return;
         }
 
-        self.mutex.as_ref().unwrap().lock();
+        self.mutex.lock();
 
         if self.nrows() < nrows || self.ncols() < ncols {
             self.resize(nrows, ncols);
@@ -506,7 +580,7 @@ impl DeltaMatrix {
             self.wait(false);
         }
 
-        self.mutex.as_ref().unwrap().unlock();
+        self.mutex.unlock();
     }
 }
 
@@ -547,32 +621,27 @@ mod tests {
         let nrows = 100;
         let ncols = 100;
         let a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
-        assert_eq!(a.m().nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 0);
-        assert_eq!(a.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.matrix.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 0);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
         assert_eq!(a.nrows(), nrows);
         assert_eq!(a.ncols(), ncols);
         assert_eq!(a.nvals(), 0);
         assert!(!a.dirty);
-        assert!(a.transposed().is_none());
+        assert!(a.transpose.is_none());
 
         let a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
-        assert_eq!(a.m().nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 0);
-        assert_eq!(a.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.matrix.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 0);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
         assert_eq!(a.nrows(), nrows);
         assert_eq!(a.ncols(), ncols);
         assert_eq!(a.nvals(), 0);
         assert!(!a.dirty);
-        assert!(a.transposed().is_some());
-        assert_eq!(a.transposed().unwrap().m().nvals(), 0);
-        assert_eq!(a.transposed().unwrap().delta_plus.nvals(), 0);
-        assert_eq!(a.transposed().unwrap().delta_minus.nvals(), 0);
-        assert_eq!(a.transposed().unwrap().nrows(), ncols);
-        assert_eq!(a.transposed().unwrap().ncols(), nrows);
-        assert_eq!(a.transposed().unwrap().nvals(), 0);
-        assert!(!a.transposed().unwrap().dirty);
-        assert!(a.transposed().unwrap().transposed().is_none());
+        assert!(a.transpose.is_some());
+        assert_eq!(a.transpose.as_ref().unwrap().matrix.nvals(), 0);
+        assert_eq!(a.transpose.as_ref().unwrap().delta_plus.nvals(), 0);
+        assert_eq!(a.transpose.as_ref().unwrap().delta_minus.nvals(), 0);
     }
 
     #[test]
@@ -589,17 +658,17 @@ mod tests {
         assert_eq!(a.extract_element_bool(i, j), Some(true));
         assert_eq!(a.nvals(), 1);
         assert!(a.dirty);
-        assert_eq!(a.m().nvals(), 0);
-        assert_eq!(a.delta_minus.nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 1);
+        assert_eq!(a.matrix.matrix.nvals(), 0);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 1);
 
         a.wait(false);
 
         a.set_element_bool(i, j);
 
-        assert_eq!(a.m().nvals(), 0);
-        assert_eq!(a.delta_minus.nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 1);
+        assert_eq!(a.matrix.matrix.nvals(), 0);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 1);
     }
 
     #[test]
@@ -621,8 +690,8 @@ mod tests {
         a.set_element_bool(i, j);
 
         assert_eq!(a.nvals(), 1);
-        assert_eq!(a.delta_minus.nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 0);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 0);
     }
 
     #[test]
@@ -637,33 +706,33 @@ mod tests {
 
         a.remove_element(i, j);
 
-        assert_eq!(a.delta_minus.nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 0);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 0);
 
         a.set_element_bool(i, j);
         a.remove_element(i, j);
 
         assert!(a.dirty);
         assert_eq!(a.nvals(), 0);
-        assert_eq!(a.matrix.nvals(), 0);
-        assert_eq!(a.delta_minus.nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 0);
+        assert_eq!(a.matrix.matrix.nvals(), 0);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 0);
 
         a.set_element_bool(i, j);
         a.wait(true);
         a.remove_element(i, j);
 
         assert_eq!(a.nvals(), 0);
-        assert_eq!(a.matrix.nvals(), 1);
-        assert_eq!(a.delta_minus.nvals(), 1);
-        assert_eq!(a.delta_plus.nvals(), 0);
+        assert_eq!(a.matrix.matrix.nvals(), 1);
+        assert_eq!(a.matrix.delta_minus.nvals(), 1);
+        assert_eq!(a.matrix.delta_plus.nvals(), 0);
 
         a.wait(true);
 
         assert_eq!(a.nvals(), 0);
-        assert_eq!(a.matrix.nvals(), 0);
-        assert_eq!(a.delta_minus.nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 0);
+        assert_eq!(a.matrix.matrix.nvals(), 0);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 0);
 
         a.set_element_bool(i, j);
         a.wait(true);
@@ -671,9 +740,9 @@ mod tests {
         a.set_element_bool(i, j);
 
         assert_eq!(a.nvals(), 1);
-        assert_eq!(a.matrix.nvals(), 1);
-        assert_eq!(a.delta_minus.nvals(), 0);
-        assert_eq!(a.delta_plus.nvals(), 0);
+        assert_eq!(a.matrix.matrix.nvals(), 1);
+        assert_eq!(a.matrix.delta_minus.nvals(), 0);
+        assert_eq!(a.matrix.delta_plus.nvals(), 0);
     }
 
     #[test]
@@ -688,37 +757,33 @@ mod tests {
 
         a.set_element_bool(i, j);
 
-        let t = a.transposed.as_ref().unwrap();
+        let t = a.transpose.as_ref().unwrap();
 
-        assert_eq!(t.extract_element_bool(j, i), Some(true));
-        assert_eq!(t.nvals(), 1);
-        assert!(t.dirty);
-        assert_eq!(t.m().nvals(), 0);
+        assert_eq!(t.matrix.nvals(), 0);
         assert_eq!(t.delta_minus.nvals(), 0);
         assert_eq!(t.delta_plus.nvals(), 1);
 
         a.wait(true);
 
-        let t = a.transposed.as_ref().unwrap();
+        let t = a.transpose.as_ref().unwrap();
 
-        assert_eq!(t.m().nvals(), 1);
+        assert_eq!(t.matrix.nvals(), 1);
         assert_eq!(t.delta_minus.nvals(), 0);
         assert_eq!(t.delta_plus.nvals(), 0);
 
         a.remove_element(i, j);
 
-        let t = a.transposed.as_ref().unwrap();
+        let t = a.transpose.as_ref().unwrap();
 
-        assert!(t.dirty);
-        assert_eq!(t.m().nvals(), 1);
+        assert_eq!(t.matrix.nvals(), 1);
         assert_eq!(t.delta_minus.nvals(), 1);
         assert_eq!(t.delta_plus.nvals(), 0);
 
         a.wait(true);
 
-        let t = a.transposed.as_ref().unwrap();
+        let t = a.transpose.as_ref().unwrap();
 
-        assert_eq!(t.m().nvals(), 0);
+        assert_eq!(t.matrix.nvals(), 0);
         assert_eq!(t.delta_minus.nvals(), 0);
         assert_eq!(t.delta_plus.nvals(), 0);
     }
@@ -778,8 +843,8 @@ mod tests {
 
         a.wait(true);
 
-        matrix_eq(&a.matrix, &m);
-        matrix_eq(&a.transposed.unwrap().matrix, &t);
+        matrix_eq(&a.matrix.matrix, &m);
+        matrix_eq(&a.transpose.unwrap().matrix, &t);
     }
 
     #[test]
@@ -792,13 +857,13 @@ mod tests {
 
         let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
 
-        let n = a.export();
-        matrix_eq(&a.matrix, &n);
+        let n = a.export(false);
+        matrix_eq(&a.matrix.matrix, &n);
 
         a.set_element_bool(i, j);
         a.wait(true);
-        let n = a.export();
-        matrix_eq(&a.matrix, &n);
+        let n = a.export(false);
+        matrix_eq(&a.matrix.matrix, &n);
     }
 
     #[test]
@@ -814,10 +879,10 @@ mod tests {
         a.wait(true);
         a.remove_element(0, 0);
         a.set_element_bool(2, 2);
-        let n = a.export();
+        let n = a.export(false);
         a.wait(true);
 
-        matrix_eq(&a.matrix, &n);
+        matrix_eq(&a.matrix.matrix, &n);
     }
 
     #[test]
@@ -837,9 +902,9 @@ mod tests {
 
         b.copy(&a);
 
-        matrix_eq(&a.matrix, &b.matrix);
-        matrix_eq(&a.delta_minus, &b.delta_minus);
-        matrix_eq(&a.delta_minus, &b.delta_minus);
+        matrix_eq(&a.matrix.matrix, &b.matrix.matrix);
+        matrix_eq(&a.matrix.delta_minus, &b.matrix.delta_minus);
+        matrix_eq(&a.matrix.delta_minus, &b.matrix.delta_minus);
     }
 
     #[test]
@@ -864,13 +929,13 @@ mod tests {
         b.remove_element(1, 2);
         b.set_element_bool(1, 3);
 
-        c.mxm(unsafe { GxB_ANY_PAIR_BOOL }, &a, &b);
+        c.mxm(unsafe { GxB_ANY_PAIR_BOOL }, &a, &b, null_mut());
 
         b.wait(true);
 
-        d.mxm(unsafe { GxB_ANY_PAIR_BOOL }, &a, &b);
+        d.mxm(unsafe { GxB_ANY_PAIR_BOOL }, &a, &b, null_mut());
 
-        matrix_eq(&c.matrix, &d.matrix);
+        matrix_eq(&c.matrix.matrix, &d.matrix.matrix);
     }
 
     #[test]
@@ -880,24 +945,22 @@ mod tests {
         let ncols = 200;
 
         let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, true);
-        let t = a.transposed.as_ref().unwrap();
+        let t = a.transpose.as_ref().unwrap();
 
         assert_eq!(a.nrows(), nrows);
-        assert_eq!(a.matrix.nrows(), nrows);
-        assert_eq!(a.delta_plus.nrows(), nrows);
-        assert_eq!(a.delta_minus.nrows(), nrows);
+        assert_eq!(a.matrix.matrix.nrows(), nrows);
+        assert_eq!(a.matrix.delta_plus.nrows(), nrows);
+        assert_eq!(a.matrix.delta_minus.nrows(), nrows);
 
-        assert_eq!(t.nrows(), ncols);
         assert_eq!(t.matrix.nrows(), ncols);
         assert_eq!(t.delta_plus.nrows(), ncols);
         assert_eq!(t.delta_minus.nrows(), ncols);
 
         assert_eq!(a.ncols(), ncols);
-        assert_eq!(a.matrix.ncols(), ncols);
-        assert_eq!(a.delta_plus.ncols(), ncols);
-        assert_eq!(a.delta_minus.ncols(), ncols);
+        assert_eq!(a.matrix.matrix.ncols(), ncols);
+        assert_eq!(a.matrix.delta_plus.ncols(), ncols);
+        assert_eq!(a.matrix.delta_minus.ncols(), ncols);
 
-        assert_eq!(t.ncols(), nrows);
         assert_eq!(t.matrix.ncols(), nrows);
         assert_eq!(t.delta_plus.ncols(), nrows);
         assert_eq!(t.delta_minus.ncols(), nrows);
@@ -907,24 +970,22 @@ mod tests {
 
         a.resize(nrows, ncols);
 
-        let t = a.transposed.as_ref().unwrap();
+        let t = a.transpose.as_ref().unwrap();
 
         assert_eq!(a.nrows(), nrows);
-        assert_eq!(a.matrix.nrows(), nrows);
-        assert_eq!(a.delta_plus.nrows(), nrows);
-        assert_eq!(a.delta_minus.nrows(), nrows);
+        assert_eq!(a.matrix.matrix.nrows(), nrows);
+        assert_eq!(a.matrix.delta_plus.nrows(), nrows);
+        assert_eq!(a.matrix.delta_minus.nrows(), nrows);
 
-        assert_eq!(t.nrows(), ncols);
         assert_eq!(t.matrix.nrows(), ncols);
         assert_eq!(t.delta_plus.nrows(), ncols);
         assert_eq!(t.delta_minus.nrows(), ncols);
 
         assert_eq!(a.ncols(), ncols);
-        assert_eq!(a.matrix.ncols(), ncols);
-        assert_eq!(a.delta_plus.ncols(), ncols);
-        assert_eq!(a.delta_minus.ncols(), ncols);
+        assert_eq!(a.matrix.matrix.ncols(), ncols);
+        assert_eq!(a.matrix.delta_plus.ncols(), ncols);
+        assert_eq!(a.matrix.delta_minus.ncols(), ncols);
 
-        assert_eq!(t.ncols(), nrows);
         assert_eq!(t.matrix.ncols(), nrows);
         assert_eq!(t.delta_plus.ncols(), nrows);
         assert_eq!(t.delta_minus.ncols(), nrows);
@@ -934,24 +995,22 @@ mod tests {
 
         a.resize(nrows, ncols);
 
-        let t = a.transposed.as_ref().unwrap();
+        let t = a.transpose.as_ref().unwrap();
 
         assert_eq!(a.nrows(), nrows);
-        assert_eq!(a.matrix.nrows(), nrows);
-        assert_eq!(a.delta_plus.nrows(), nrows);
-        assert_eq!(a.delta_minus.nrows(), nrows);
+        assert_eq!(a.matrix.matrix.nrows(), nrows);
+        assert_eq!(a.matrix.delta_plus.nrows(), nrows);
+        assert_eq!(a.matrix.delta_minus.nrows(), nrows);
 
-        assert_eq!(t.nrows(), ncols);
         assert_eq!(t.matrix.nrows(), ncols);
         assert_eq!(t.delta_plus.nrows(), ncols);
         assert_eq!(t.delta_minus.nrows(), ncols);
 
         assert_eq!(a.ncols(), ncols);
-        assert_eq!(a.matrix.ncols(), ncols);
-        assert_eq!(a.delta_plus.ncols(), ncols);
-        assert_eq!(a.delta_minus.ncols(), ncols);
+        assert_eq!(a.matrix.matrix.ncols(), ncols);
+        assert_eq!(a.matrix.delta_plus.ncols(), ncols);
+        assert_eq!(a.matrix.delta_minus.ncols(), ncols);
 
-        assert_eq!(t.ncols(), nrows);
         assert_eq!(t.matrix.ncols(), nrows);
         assert_eq!(t.delta_plus.ncols(), nrows);
         assert_eq!(t.delta_minus.ncols(), nrows);

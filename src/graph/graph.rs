@@ -180,7 +180,7 @@ impl Graph {
     ) {
         let policy = self.set_matrix_policy(MatrixPolicy::FlushResize);
 
-        self.get_adjacency_matrix(false).wait(force_flush);
+        self.get_adjacency_matrix().wait(force_flush);
         self.get_node_label_matrix().wait(force_flush);
         self.get_zero_matrix().wait(force_flush);
 
@@ -189,7 +189,7 @@ impl Graph {
         }
 
         for relation in 0..self.relations.len() {
-            self.get_relation_matrix(relation as RelationID, false)
+            self.get_relation_matrix(relation as RelationID)
                 .wait(force_flush);
         }
 
@@ -364,11 +364,9 @@ impl Graph {
         r: i32,
         e: &mut Edge,
     ) {
-        self.get_relation_matrix(r, false);
+        self.get_relation_matrix(r);
 
-        let adj = self.get_adjacency_matrix(false);
-
-        adj.set_element_bool(src, dest);
+        self.get_adjacency_matrix().set_element_bool(src, dest);
 
         self.relations[r as usize].set_element(src, dest, e.id);
         self.stats.increment_edge_count(r, 1);
@@ -400,14 +398,14 @@ impl Graph {
             e.attributes = unsafe { DataBlock_AllocateItem(self.edges, &mut e.id) } as _;
         }
 
-        let adj = self.get_adjacency_matrix(false);
+        let adj = self.get_adjacency_matrix();
         for edge in edges.iter() {
             let src = unsafe { (**edge).src_id };
             let dest = unsafe { (**edge).dest_id };
             adj.set_element_bool(src, dest);
         }
 
-        self.get_relation_matrix(r, false);
+        self.get_relation_matrix(r);
 
         self.relations[r as usize].set_elements(edges);
         self.stats.increment_edge_count(r, edges.len() as u64);
@@ -443,7 +441,7 @@ impl Graph {
         );
 
         for node in nodes {
-            let mut it = DeltaMatrixIter::new_range(&self.node_labels, node.id, node.id);
+            let mut it = DeltaMatrixIter::new_range(&self.node_labels, node.id, node.id, false);
 
             while let Ok(Some((_, j))) = it.next_bool() {
                 elems.set_element_bool(true, node.id, j);
@@ -581,7 +579,7 @@ impl Graph {
         &mut self,
         r: RelationID,
     ) -> bool {
-        let a = self.get_relation_matrix(r, false).nvals();
+        let a = self.get_relation_matrix(r).nvals();
         let b = self.relation_edge_count(r);
         a != b
     }
@@ -623,7 +621,7 @@ impl Graph {
         } else {
             edge_type..edge_type + 1
         } {
-            self.get_relation_matrix(r, false);
+            self.get_relation_matrix(r);
 
             if dir == GraphEdgeDir::Outgoing || dir == GraphEdgeDir::Both {
                 count += self.relations[r as usize].row_degree(n.id);
@@ -644,7 +642,7 @@ impl Graph {
     ) -> u32 {
         let m = self.get_node_label_matrix();
 
-        let mut it = DeltaMatrixIter::new_range(m, n.id, n.id);
+        let mut it = DeltaMatrixIter::new_range(m, n.id, n.id, false);
         let mut i = 0;
 
         while let Ok(Some((_, j))) = it.next_bool() {
@@ -655,17 +653,9 @@ impl Graph {
         i
     }
 
-    pub fn get_adjacency_matrix(
-        &mut self,
-        transposed: bool,
-    ) -> &mut DeltaMatrix {
+    pub fn get_adjacency_matrix(&mut self) -> &mut DeltaMatrix {
         let n = self.required_matrix_dim();
-        let m = Graph::syncronize(self.matrix_policy, &mut self.adjacency_matrix, n, n);
-        if transposed {
-            m.transposed_mut().unwrap()
-        } else {
-            m
-        }
+        Graph::syncronize(self.matrix_policy, &mut self.adjacency_matrix, n, n)
     }
 
     pub fn get_label_matrix(
@@ -682,7 +672,6 @@ impl Graph {
     pub fn get_relation_matrix(
         &mut self,
         relation_idx: i32,
-        transposed: bool,
     ) -> &mut DeltaMatrix {
         let n = self.required_matrix_dim();
         let m = if relation_idx == -1 {
@@ -690,12 +679,7 @@ impl Graph {
         } else {
             &mut self.relations[relation_idx as usize].m
         };
-        let m = Graph::syncronize(self.matrix_policy, m, n, n);
-        if transposed {
-            m.transposed_mut().unwrap()
-        } else {
-            m
-        }
+        Graph::syncronize(self.matrix_policy, m, n, n)
     }
 
     pub fn get_node_label_matrix(&mut self) -> &mut DeltaMatrix {
@@ -730,7 +714,7 @@ impl Graph {
 
         let dim = unsafe { DataBlock_ItemCap(self.nodes) };
 
-        self.get_adjacency_matrix(false).resize(dim, dim);
+        self.get_adjacency_matrix().resize(dim, dim);
 
         self.get_node_label_matrix().resize(dim, dim);
 
@@ -739,7 +723,7 @@ impl Graph {
         }
 
         for i in 0..self.relation_type_count() {
-            self.get_relation_matrix(i, false).resize(dim, dim);
+            self.get_relation_matrix(i).resize(dim, dim);
         }
     }
 
@@ -771,7 +755,7 @@ impl Graph {
 
         for label in labels {
             self.get_label_matrix(*label)
-                .m_mut()
+                .m_mut(false)
                 .set_element_bool(true, id, id);
             self.stats.increment_node_count(*label, 1);
         }
@@ -818,19 +802,13 @@ impl Graph {
         edge_id: u64,
         r: i32,
     ) {
-        let m = self.get_relation_matrix(r, false);
-        m.m_mut().set_element_u64(edge_id, src, dest);
-        m.transposed_mut()
-            .unwrap()
-            .m_mut()
-            .set_element_bool(true, dest, src);
+        let m = self.get_relation_matrix(r);
+        m.m_mut(false).set_element_u64(edge_id, src, dest);
+        m.m_mut(true).set_element_bool(true, dest, src);
 
-        let adj = self.get_adjacency_matrix(false);
-        adj.m_mut().set_element_bool(true, src, dest);
-        adj.transposed_mut()
-            .unwrap()
-            .m_mut()
-            .set_element_bool(true, dest, src);
+        let adj = self.get_adjacency_matrix();
+        adj.m_mut(false).set_element_bool(true, src, dest);
+        adj.m_mut(true).set_element_bool(true, dest, src);
 
         self.stats.increment_edge_count(r, 1);
     }
@@ -840,7 +818,7 @@ impl Graph {
         let node_count = self.required_matrix_dim();
         let label_count = self.label_type_count();
         let node_labels = self.get_node_label_matrix();
-        let node_labels_m = node_labels.m_mut().grb_matrix_ref();
+        let node_labels_m = node_labels.m_mut(false).grb_matrix_ref();
 
         debug_assert!(node_labels.nvals() == 0);
 
@@ -850,7 +828,7 @@ impl Graph {
 
         for l in 0..label_count {
             let lm = self.get_label_matrix(l);
-            let m = lm.m_mut();
+            let m = lm.m_mut(false);
 
             unsafe {
                 grb_check!(GxB_Vector_diag(v, m.grb_matrix_ref(), 0, null_mut()));
@@ -894,7 +872,7 @@ impl Graph {
             }
 
             if self
-                .get_relation_matrix(ri as RelationID, false)
+                .get_relation_matrix(ri as RelationID)
                 .extract_element_bool(src, dest)
                 .is_some()
             {
@@ -904,7 +882,7 @@ impl Graph {
         }
 
         if !connected {
-            self.get_adjacency_matrix(false).remove_element(src, dest);
+            self.get_adjacency_matrix().remove_element(src, dest);
         }
     }
 
@@ -978,7 +956,7 @@ impl<'a> EdgeIterator<'a> {
             self.all_edges = false;
             self.r = r;
         }
-        self.graph.get_relation_matrix(self.r, false);
+        self.graph.get_relation_matrix(self.r);
         self.it = self.graph.relations[self.r as usize].iter(src_id, dest_id);
     }
 
@@ -996,7 +974,7 @@ impl<'a> EdgeIterator<'a> {
 
         if self.all_edges && self.r + 1 < self.graph.relation_type_count() {
             self.r += 1;
-            self.graph.get_relation_matrix(self.r, false);
+            self.graph.get_relation_matrix(self.r);
             self.it = self.graph.relations[self.r as usize].iter(self.src_id, self.dest_id);
             return self.next(e);
         }
@@ -1037,7 +1015,7 @@ impl<'a> NodeEdgeIterator<'a> {
             self.both_dir = false;
             self.dir = dir;
         }
-        g.get_relation_matrix(r, false);
+        g.get_relation_matrix(r);
         self.graph = g;
         self.it = g.relations[r as usize].iter_range(
             node_id,
@@ -1174,33 +1152,24 @@ mod tests {
         g.create_edge(1, 2, r, &mut edge);
 
         assert_eq!(g.node_count(), 3);
-        assert_eq!(g.get_relation_matrix(r, false).nvals(), 3);
-        assert_eq!(g.get_adjacency_matrix(false).nvals(), 3);
+        assert_eq!(g.get_relation_matrix(r).nvals(), 3);
+        assert_eq!(g.get_adjacency_matrix().nvals(), 3);
 
         let mut edges = Vec::new();
         unsafe {
-            let mut it: MaybeUninit<NodeEdgeIterator> = MaybeUninit::uninit();
-            it.as_mut_ptr()
-                .as_mut()
-                .unwrap()
-                .init(&mut g, 1, GraphEdgeDir::Both, 0);
-            let mut it = it.assume_init();
-            if let Some(edge) = it.next() {
-                edges.push(edge);
-            }
-            if let Some(edge) = it.next() {
-                edges.push(edge);
-            }
-            let mut it: MaybeUninit<NodeEdgeIterator> = MaybeUninit::uninit();
-            it.as_mut_ptr()
-                .as_mut()
-                .unwrap()
-                .init(&mut g, 1, GraphEdgeDir::Both, 1);
-            let mut it = it.assume_init();
-            if let Some(edge) = it.next() {
-                edges.push(edge);
+            for i in 0..g.relation_type_count() {
+                let mut it: MaybeUninit<NodeEdgeIterator> = MaybeUninit::uninit();
+                it.as_mut_ptr()
+                    .as_mut()
+                    .unwrap()
+                    .init(&mut g, 0, GraphEdgeDir::Both, i);
+                let mut it = it.assume_init();
+                while let Some(edge) = it.next() {
+                    edges.push(edge);
+                }
             }
         }
+        assert_eq!(edges.len(), 2);
         g.delete_edges(edges.as_mut_slice());
         g.delete_nodes(&[n1]);
 

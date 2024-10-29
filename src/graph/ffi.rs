@@ -408,11 +408,8 @@ unsafe extern "C" fn Graph_GetNodeLabels(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_GetAdjacencyMatrix(
-    g: *mut Graph,
-    transposed: bool,
-) -> *mut DeltaMatrix {
-    (&mut *g).get_adjacency_matrix(transposed)
+unsafe extern "C" fn Graph_GetAdjacencyMatrix(g: *mut Graph) -> *mut DeltaMatrix {
+    (&mut *g).get_adjacency_matrix()
 }
 
 #[no_mangle]
@@ -429,9 +426,8 @@ unsafe extern "C" fn Graph_GetLabelMatrix(
 unsafe extern "C" fn Graph_GetRelationMatrix(
     g: *mut Graph,
     relation_idx: RelationID,
-    transposed: bool,
 ) -> *mut DeltaMatrix {
-    (&mut *g).get_relation_matrix(relation_idx, transposed)
+    (&mut *g).get_relation_matrix(relation_idx)
 }
 
 #[no_mangle]
