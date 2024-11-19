@@ -111,7 +111,7 @@ pub struct Graph {
     node_labels: DeltaMatrix,
     relations: Vec<Tensor>,
     zero_matrix: DeltaMatrix,
-    rwlock: CRWLock,
+    crwlock: CRWLock,
     writelocked: bool,
     matrix_policy: MatrixPolicy,
     stats: GraphStatistics,
@@ -148,7 +148,7 @@ impl Graph {
             node_labels: DeltaMatrix::new(unsafe { GrB_BOOL }, node_cap, node_cap, false),
             relations: Vec::new(),
             zero_matrix: DeltaMatrix::new(unsafe { GrB_BOOL }, node_cap, node_cap, false),
-            rwlock: CRWLock::new(),
+            crwlock: CRWLock::new(),
             writelocked: false,
             matrix_policy: MatrixPolicy::FlushResize,
             stats: GraphStatistics {
@@ -160,18 +160,18 @@ impl Graph {
     }
 
     pub fn acquire_read_lock(&mut self) {
-        self.rwlock.acquire_read();
+        self.crwlock.acquire_read();
     }
 
     pub fn acquire_write_lock(&mut self) {
         debug_assert!(!self.writelocked);
-        self.rwlock.acquire_write();
+        self.crwlock.acquire_write();
         self.writelocked = true;
     }
 
     pub fn release_lock(&mut self) {
         self.writelocked = false;
-        self.rwlock.release();
+        self.crwlock.release();
     }
 
     pub fn apply_all_pending(

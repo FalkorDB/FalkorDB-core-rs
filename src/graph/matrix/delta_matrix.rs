@@ -3,12 +3,10 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
+use crate::binding::graph::{ConfigOptionField, Config_Option_get};
+use parking_lot::Mutex;
+use std::sync::Arc;
 use std::{mem::MaybeUninit, ptr::null_mut};
-
-use crate::binding::{
-    cmutex::CMutex,
-    graph::{ConfigOptionField, Config_Option_get},
-};
 
 use super::{
     sparse_matrix::SparseMatrix,
@@ -34,7 +32,7 @@ pub struct DeltaMatrix {
     dirty: bool,
     matrix: DeltaMatrixBase,
     transpose: Option<DeltaMatrixBase>,
-    mutex: CMutex,
+    mutex: Arc<Mutex<()>>,
 }
 
 impl DeltaMatrix {
@@ -62,7 +60,7 @@ impl DeltaMatrix {
                 } else {
                     None
                 },
-                mutex: CMutex::new(),
+                mutex: Arc::new(Mutex::new(())),
             };
             x.matrix.matrix.set_sparsity(GxB_SPARSE | GxB_HYPERSPARSE);
             x.matrix.delta_plus.set_sparsity(GxB_HYPERSPARSE);
@@ -569,8 +567,8 @@ impl DeltaMatrix {
         if !(self.nrows() < nrows || self.ncols() < ncols || self.dirty) {
             return;
         }
-
-        self.mutex.lock();
+        let mutex = Arc::clone(&self.mutex);
+        let _guard = mutex.lock();
 
         if self.nrows() < nrows || self.ncols() < ncols {
             self.resize(nrows, ncols);
@@ -579,8 +577,6 @@ impl DeltaMatrix {
         if self.dirty {
             self.wait(false);
         }
-
-        self.mutex.unlock();
     }
 }
 
