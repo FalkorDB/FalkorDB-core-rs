@@ -3,42 +3,68 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
-use std::{cell::UnsafeCell, mem::MaybeUninit, ptr::null_mut};
+use parking_lot::{Mutex, MutexGuard};
+use std::cell::UnsafeCell;
+use std::mem::ManuallyDrop;
 
-use libc::pthread_mutex_t;
-
-/// Wrap C mutex as we can't use Rust Mutex.
+/// Wrap parking_lot mutex for C usage while keep the rust code working directly with the underline mutex.
 /// Used to lock the matrix only when we apply pending changes.
+/// Here is how it should call from C (rust code):
+/// ```compile_only
+/// let m = CMutex::new();
+/// m.lock();
+/// // do something
+/// m.unlock();
+/// ```
+/// Here is how it should call from Rust:
+/// ```compile_only
+/// let m = CMutex::new();
+/// // if you need to use this mutex from multiple threads,
+/// // you need to put m.mutex in an Arc and clone it for each thread.
+/// let guard = m.mutex.lock();
+/// // do something
+/// // drop guard or let it go out of scope
+/// drop(guard);
+/// ```
 pub struct CMutex {
-    mutex: UnsafeCell<pthread_mutex_t>,
+    pub mutex: Mutex<()>,
+    guard: UnsafeCell<Option<ManuallyDrop<MutexGuard<'static, ()>>>>,
 }
+unsafe impl Send for CMutex {}
+unsafe impl Sync for CMutex {}
 
 impl CMutex {
     pub fn new() -> Self {
-        unsafe {
-            let mut mutex = MaybeUninit::uninit();
-            libc::pthread_mutex_init(mutex.as_mut_ptr(), null_mut());
-            Self {
-                mutex: UnsafeCell::new(mutex.assume_init()),
-            }
+        CMutex {
+            mutex: Mutex::new(()),
+            guard: UnsafeCell::new(None),
         }
     }
 
+    #[inline]
     pub fn lock(&self) {
+        let guard = self.mutex.lock();
         unsafe {
-            libc::pthread_mutex_lock(self.mutex.get());
+            *self.guard.get() = Some(ManuallyDrop::new(std::mem::transmute(guard)));
         }
     }
-
+    #[inline]
     pub fn unlock(&self) {
         unsafe {
-            libc::pthread_mutex_unlock(self.mutex.get());
+            if let Some(mut guard) = (*self.guard.get()).take() {
+                ManuallyDrop::drop(&mut guard);
+            }
         }
     }
 }
 
 impl Drop for CMutex {
+    #[inline]
     fn drop(&mut self) {
-        unsafe { libc::pthread_mutex_destroy(self.mutex.get()) };
+        unsafe {
+            if let Some(mut guard) = (*self.guard.get_mut()).take() {
+                ManuallyDrop::drop(&mut guard);
+            }
+        }
     }
 }
