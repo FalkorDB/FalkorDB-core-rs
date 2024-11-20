@@ -16,8 +16,8 @@ use crate::{
             AttributeSet, AttributeSet_Free, DataBlock, DataBlockIterator, DataBlockIterator_Free,
             DataBlockIterator_Next, DataBlock_Accommodate, DataBlock_AllocateItem,
             DataBlock_AllocateItemOutOfOrder, DataBlock_DeleteItem, DataBlock_DeletedItems,
-            DataBlock_DeletedItemsCount, DataBlock_Ensure, DataBlock_Free, DataBlock_FullScan,
-            DataBlock_GetItem, DataBlock_GetReservedIdx, DataBlock_ItemCap, DataBlock_ItemCount,
+            DataBlock_DeletedItemsCount, DataBlock_Free, DataBlock_FullScan, DataBlock_GetItem,
+            DataBlock_GetReservedIdx, DataBlock_ItemCap, DataBlock_ItemCount,
             DataBlock_MarkAsDeletedOutOfOrder, DataBlock_New, DataBlock_Scan, Edge, EdgeID,
             LabelID, Node, NodeID, RelationID,
         },
@@ -407,7 +407,7 @@ impl Graph {
 
         self.get_relation_matrix(r);
 
-        self.relations[r as usize].set_elements(edges);
+        self.relations[r as usize].set_edges(edges);
         self.stats.increment_edge_count(r, edges.len() as u64);
     }
 
@@ -549,8 +549,8 @@ impl Graph {
         self.stats.node_count[label as usize]
     }
 
-    pub fn edge_count(&self) -> usize {
-        unsafe { DataBlock_ItemCount(self.edges) as usize }
+    pub fn edge_count(&self) -> u64 {
+        unsafe { DataBlock_ItemCount(self.edges) }
     }
 
     pub fn relation_edge_count(
@@ -706,27 +706,6 @@ impl Graph {
         m
     }
 
-    pub fn ensure_node_cap(
-        &mut self,
-        cap: u64,
-    ) {
-        unsafe { DataBlock_Ensure(self.nodes, cap) };
-
-        let dim = unsafe { DataBlock_ItemCap(self.nodes) };
-
-        self.get_adjacency_matrix().resize(dim, dim);
-
-        self.get_node_label_matrix().resize(dim, dim);
-
-        for i in 0..self.label_type_count() {
-            self.get_label_matrix(i).resize(dim, dim);
-        }
-
-        for i in 0..self.relation_type_count() {
-            self.get_relation_matrix(i).resize(dim, dim);
-        }
-    }
-
     pub fn mark_edge_deleted(
         &self,
         id: u64,
@@ -761,30 +740,15 @@ impl Graph {
         }
     }
 
-    pub fn set_edge(
+    pub fn set_alloc_edge_attributes(
         &mut self,
-        multi_edge: bool,
         edge_id: u64,
-        src: u64,
-        dest: u64,
-        r: i32,
         e: &mut Edge,
     ) {
         let set =
             unsafe { DataBlock_AllocateItemOutOfOrder(self.edges, edge_id) } as *mut AttributeSet;
         unsafe { set.write(null_mut()) };
-
-        e.id = edge_id;
-        e.src_id = src;
-        e.dest_id = dest;
         e.attributes = set;
-        e.relation_id = r;
-
-        if multi_edge {
-            self.form_connection(src, dest, r, e)
-        } else {
-            self.optimized_single_edge_form_connection(src, dest, edge_id, r);
-        }
     }
 
     pub fn get_deleted_nodes_list(&self) -> *mut u64 {
@@ -793,24 +757,6 @@ impl Graph {
 
     pub fn get_deleted_edges_list(&self) -> *mut u64 {
         unsafe { DataBlock_DeletedItems(self.edges) }
-    }
-
-    fn optimized_single_edge_form_connection(
-        &mut self,
-        src: u64,
-        dest: u64,
-        edge_id: u64,
-        r: i32,
-    ) {
-        let m = self.get_relation_matrix(r);
-        m.m_mut(false).set_element_u64(edge_id, src, dest);
-        m.m_mut(true).set_element_bool(true, dest, src);
-
-        let adj = self.get_adjacency_matrix();
-        adj.m_mut(false).set_element_bool(true, src, dest);
-        adj.m_mut(true).set_element_bool(true, dest, src);
-
-        self.stats.increment_edge_count(r, 1);
     }
 
     pub fn set_node_labels(&mut self) {
@@ -888,6 +834,41 @@ impl Graph {
 
     pub fn set_partial(&mut self) {
         self.partial = true;
+    }
+
+    pub fn optimized_form_connections(
+        &mut self,
+        r: i32,
+        srcs: &[NodeID],
+        dests: &[NodeID],
+        ids: &[EdgeID],
+        multi_edge: bool,
+    ) {
+        let adj = self.get_adjacency_matrix();
+
+        for i in 0..srcs.len() {
+            let src = srcs[i];
+            let dest = dests[i];
+
+            adj.m_mut(false).set_element_bool(true, src, dest);
+            adj.m_mut(true).set_element_bool(true, dest, src);
+        }
+
+        if multi_edge {
+            self.relations[r as usize].set_elements(srcs, dests, ids);
+        } else {
+            let t = self.get_relation_matrix(r);
+            for i in 0..srcs.len() {
+                let src = srcs[i];
+                let dest = dests[i];
+                let id = ids[i];
+
+                t.m_mut(false).set_element_u64(id, src, dest);
+                t.m_mut(true).set_element_bool(true, dest, src);
+            }
+        }
+
+        self.stats.increment_edge_count(r, srcs.len() as u64);
     }
 }
 
@@ -1029,7 +1010,7 @@ impl<'a> NodeEdgeIterator<'a> {
             return None;
         }
         loop {
-            if let Some((src_id, dest_id, edge_id)) = self.it.next() {
+            if let Some((src_id, dest_id, edge_id, _)) = self.it.next() {
                 let mut e = Edge {
                     src_id: src_id,
                     dest_id: dest_id,
