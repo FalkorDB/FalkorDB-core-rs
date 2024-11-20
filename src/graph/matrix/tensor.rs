@@ -74,7 +74,7 @@ impl Tensor {
         }
     }
 
-    pub fn set_elements(
+    pub fn set_edges(
         &mut self,
         edges: &mut [*mut Edge],
     ) {
@@ -141,6 +141,77 @@ impl Tensor {
                     self.m.set_element_u64(set_msb(v as u64), src, dest);
                     for j in from..to {
                         GrB_Vector_setElement_BOOL(v, true, edges[j].as_ref().unwrap().id);
+                    }
+                    GrB_Vector_wait(v, GrB_WaitMode::GrB_MATERIALIZE);
+                }
+            }
+        }
+    }
+
+    pub fn set_elements(
+        &mut self,
+        srcs: &[NodeID],
+        dests: &[NodeID],
+        ids: &[EdgeID],
+    ) {
+        let mut delayed = Vec::new();
+
+        let mut i = 0;
+        while i < srcs.len() {
+            let src = srcs[i];
+            let dest = dests[i];
+
+            unsafe {
+                let mut j = i + 1;
+                while j < srcs.len() && srcs[j] == src && dests[j] == dest {
+                    j += 1;
+                }
+
+                match self.m.extract_element_u64(src, dest) {
+                    Some(id) => {
+                        if single_edge(id) {
+                            let mut v = MaybeUninit::uninit();
+                            GrB_Vector_new(v.as_mut_ptr(), GrB_BOOL, GrB_INDEX_MAX);
+                            let v = v.assume_init();
+                            self.m.set_element_u64(set_msb(v as u64), src, dest);
+                            GrB_Vector_setElement_BOOL(v, true, id);
+                            for k in i..j {
+                                GrB_Vector_setElement_BOOL(v, true, ids[k]);
+                            }
+                            GrB_Vector_wait(v, GrB_WaitMode::GrB_MATERIALIZE);
+                        } else {
+                            let v = clear_msb(id) as GrB_Vector;
+                            for k in i..j {
+                                GrB_Vector_setElement_BOOL(v, true, ids[k]);
+                            }
+                            GrB_Vector_wait(v, GrB_WaitMode::GrB_MATERIALIZE);
+                        }
+                    }
+                    None => {
+                        delayed.push(i);
+                        delayed.push(j);
+                    }
+                }
+                i = j;
+            }
+        }
+
+        for i in (0..delayed.len()).step_by(2) {
+            let from = delayed[i];
+            let to = delayed[i + 1];
+            unsafe {
+                let src = srcs[from];
+                let dest = dests[from];
+
+                if to - from == 1 {
+                    self.m.set_element_u64(ids[from], src, dest);
+                } else {
+                    let mut v = MaybeUninit::uninit();
+                    GrB_Vector_new(v.as_mut_ptr(), GrB_BOOL, GrB_INDEX_MAX);
+                    let v = v.assume_init();
+                    self.m.set_element_u64(set_msb(v as u64), src, dest);
+                    for j in from..to {
+                        GrB_Vector_setElement_BOOL(v, true, ids[j]);
                     }
                     GrB_Vector_wait(v, GrB_WaitMode::GrB_MATERIALIZE);
                 }
@@ -386,7 +457,7 @@ impl Iterator for TensorIterator {
 }
 
 impl Iterator for TensorRangeIterator<'_> {
-    type Item = (NodeID, NodeID, EdgeID);
+    type Item = (NodeID, NodeID, EdgeID, bool);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.eit.is_some() {
@@ -396,7 +467,7 @@ impl Iterator for TensorRangeIterator<'_> {
                 if info == GrB_Info::GxB_EXHAUSTED {
                     self.eit = None;
                 }
-                return Some((self.src_id, self.dest_id, self.edge_id));
+                return Some((self.src_id, self.dest_id, self.edge_id, true));
             }
         }
 
@@ -405,7 +476,9 @@ impl Iterator for TensorRangeIterator<'_> {
                 self.src_id = src_id;
                 self.dest_id = dest_id;
                 self.edge_id = self.m.m.extract_element_u64(src_id, dest_id).unwrap();
+                let mut tensor = false;
                 if !single_edge(self.edge_id) {
+                    tensor = true;
                     let v = clear_msb(self.edge_id) as GrB_Vector;
                     let mut it = MaybeUninit::uninit();
                     unsafe {
@@ -420,7 +493,7 @@ impl Iterator for TensorRangeIterator<'_> {
                         debug_assert!(info == GrB_Info::GrB_SUCCESS);
                     }
                 }
-                return Some((src_id, dest_id, self.edge_id));
+                return Some((src_id, dest_id, self.edge_id, tensor));
             }
         } else {
             if let Ok(Some((src_id, dest_id, current_edge))) = self.rit.as_mut().unwrap().next_u64()
@@ -428,7 +501,9 @@ impl Iterator for TensorRangeIterator<'_> {
                 self.src_id = src_id;
                 self.dest_id = dest_id;
                 self.edge_id = current_edge;
+                let mut tensor = false;
                 if !single_edge(current_edge) {
+                    tensor = true;
                     let v = clear_msb(current_edge) as GrB_Vector;
                     unsafe {
                         let mut it = MaybeUninit::uninit();
@@ -441,7 +516,7 @@ impl Iterator for TensorRangeIterator<'_> {
                         debug_assert!(info == GrB_Info::GrB_SUCCESS);
                     }
                 }
-                return Some((src_id, dest_id, self.edge_id));
+                return Some((src_id, dest_id, self.edge_id, tensor));
             }
         }
 

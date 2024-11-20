@@ -268,7 +268,7 @@ unsafe extern "C" fn Graph_LabeledNodeCount(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_EdgeCount(g: *mut Graph) -> usize {
+unsafe extern "C" fn Graph_EdgeCount(g: *mut Graph) -> u64 {
     (&*g).edge_count()
 }
 
@@ -457,33 +457,6 @@ unsafe extern "C" fn Graph_Free(g: *mut Graph) {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_EnsureNodeCap(
-    g: *mut Graph,
-    cap: u64,
-) {
-    (&mut *g).ensure_node_cap(cap);
-}
-
-#[no_mangle]
-#[allow(non_snake_case)]
-unsafe extern "C" fn Graph_MarkEdgeDeleted(
-    g: *mut Graph,
-    id: EdgeID,
-) {
-    (&mut *g).mark_edge_deleted(id);
-}
-
-#[no_mangle]
-#[allow(non_snake_case)]
-unsafe extern "C" fn Graph_MarkNodeDeleted(
-    g: *mut Graph,
-    id: EdgeID,
-) {
-    (&mut *g).mark_node_deleted(id);
-}
-
-#[no_mangle]
-#[allow(non_snake_case)]
 unsafe extern "C" fn Graph_SetNode(
     g: *mut Graph,
     id: NodeID,
@@ -506,16 +479,50 @@ unsafe extern "C" fn Graph_SetNodeLabels(g: *mut Graph) {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_SetEdge(
+unsafe extern "C" fn Graph_OptimizedFormConnections(
     g: *mut Graph,
-    multi_edge: bool,
-    edge_id: EdgeID,
-    src: NodeID,
-    dest: NodeID,
     r: RelationID,
+    srcs: *const NodeID,
+    dests: *const NodeID,
+    ids: *const EdgeID,
+    n: u64,
+    multi_edge: bool,
+) {
+    (&mut *g).optimized_form_connections(
+        r,
+        from_raw_parts(srcs, n as usize),
+        from_raw_parts(dests, n as usize),
+        from_raw_parts(ids, n as usize),
+        multi_edge,
+    );
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe extern "C" fn Graph_AllocEdgeAttributes(
+    g: *mut Graph,
+    edge_id: EdgeID,
     e: *mut Edge,
 ) {
-    (&mut *g).set_edge(multi_edge, edge_id, src, dest, r, e.as_mut().unwrap());
+    (&mut *g).set_alloc_edge_attributes(edge_id, e.as_mut().unwrap());
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe extern "C" fn Graph_MarkNodeDeleted(
+    g: *mut Graph,
+    id: EdgeID,
+) {
+    (&mut *g).mark_node_deleted(id);
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe extern "C" fn Graph_MarkEdgeDeleted(
+    g: *mut Graph,
+    id: EdgeID,
+) {
+    (&mut *g).mark_edge_deleted(id);
 }
 
 #[no_mangle]
@@ -553,8 +560,9 @@ unsafe extern "C" fn TensorIterator_next(
     src: *mut NodeID,
     dest: *mut NodeID,
     edge_id: *mut EdgeID,
+    tensor: *mut bool,
 ) -> bool {
-    if let Some((src_id, dest_id, id)) = it.as_mut().unwrap().next() {
+    if let Some((src_id, dest_id, id, t)) = it.as_mut().unwrap().next() {
         if !src.is_null() {
             src.write(src_id);
         }
@@ -563,6 +571,9 @@ unsafe extern "C" fn TensorIterator_next(
         }
         if !edge_id.is_null() {
             edge_id.write(id);
+        }
+        if !tensor.is_null() {
+            tensor.write(t);
         }
         true
     } else {

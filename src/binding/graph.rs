@@ -207,10 +207,6 @@ extern "C" {
         idx: u64,
     ) -> *mut c_void;
     pub fn DataBlock_Scan(dataBlock: *const DataBlock) -> *mut DataBlockIterator;
-    pub fn DataBlock_Ensure(
-        dataBlock: *const DataBlock,
-        idx: u64,
-    );
     pub fn DataBlock_MarkAsDeletedOutOfOrder(
         dataBlock: *const DataBlock,
         idx: u64,
