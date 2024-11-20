@@ -3,17 +3,20 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
-use std::cell::UnsafeCell;
+use std::cell::Cell;
 
-use parking_lot::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::mem::ManuallyDrop;
+
+thread_local! {
+    static READ_GUARD: Cell<Option<RwLockReadGuard<'static, ()>>> = Cell::new(None);
+    static WRITE_GUARD: Cell<Option<RwLockWriteGuard<'static, ()>>> = Cell::new(None);
+}
 
 /// Wrap parking_lot rwlock to promote access from C and direct access from Rust.
 /// Used to lock the graph.
 pub struct CRWLock {
     pub rwlock: RwLock<()>,
-    read_guards: Mutex<Vec<ManuallyDrop<RwLockReadGuard<'static, ()>>>>,
-    write_guard: UnsafeCell<Option<ManuallyDrop<RwLockWriteGuard<'static, ()>>>>,
 }
 unsafe impl Send for CRWLock {}
 unsafe impl Sync for CRWLock {}
@@ -22,50 +25,28 @@ impl CRWLock {
     pub fn new() -> Self {
         CRWLock {
             rwlock: RwLock::new(()),
-            read_guards: Mutex::new(Vec::new()),
-            write_guard: UnsafeCell::new(None),
         }
     }
 
     #[inline]
     pub fn acquire_read(&self) {
         let guard = self.rwlock.read();
-        let static_guard = unsafe { std::mem::transmute(guard) };
-        self.read_guards
-            .lock()
-            .push(ManuallyDrop::new(static_guard));
+        unsafe {
+            READ_GUARD.set(Some(std::mem::transmute(guard)));
+        }
     }
 
     #[inline]
     pub fn acquire_write(&self) {
         let guard = self.rwlock.write();
         unsafe {
-            *self.write_guard.get() = Some(ManuallyDrop::new(std::mem::transmute(guard)));
+            WRITE_GUARD.set(Some(std::mem::transmute(guard)));
         }
     }
 
     #[inline]
     pub fn release(&self) {
-        unsafe {
-            if let Some(mut write_guard) = (*self.write_guard.get()).take() {
-                ManuallyDrop::drop(&mut write_guard);
-            } else if let Some(mut read_guard) = self.read_guards.lock().pop() {
-                ManuallyDrop::drop(&mut read_guard);
-            }
-        }
-    }
-}
-
-impl Drop for CRWLock {
-    #[inline]
-    fn drop(&mut self) {
-        unsafe {
-            if let Some(mut write_guard) = self.write_guard.get_mut().take() {
-                ManuallyDrop::drop(&mut write_guard);
-            }
-            while let Some(mut read_guard) = self.read_guards.get_mut().pop() {
-                ManuallyDrop::drop(&mut read_guard);
-            }
-        }
+        WRITE_GUARD.take();
+        READ_GUARD.take();
     }
 }
