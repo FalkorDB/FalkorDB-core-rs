@@ -736,7 +736,6 @@ impl Graph {
             self.get_label_matrix(*label)
                 .m_mut(false)
                 .set_element_bool(true, id, id);
-            self.stats.increment_node_count(*label, 1);
         }
     }
 
@@ -869,6 +868,12 @@ impl Graph {
         }
 
         self.stats.increment_edge_count(r, srcs.len() as u64);
+    }
+    
+    pub fn update_node_statistics(&mut self) {
+        for i in 0..self.labels.len() {
+            self.stats.node_count[i] = self.labels[i].nvals();
+        }
     }
 }
 

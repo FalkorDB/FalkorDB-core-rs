@@ -457,7 +457,7 @@ unsafe extern "C" fn Graph_Free(g: *mut Graph) {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_SetNode(
+unsafe extern "C" fn Serializer_SetNode(
     g: *mut Graph,
     id: NodeID,
     labels: *const LabelID,
@@ -473,13 +473,13 @@ unsafe extern "C" fn Graph_SetNode(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_SetNodeLabels(g: *mut Graph) {
+unsafe extern "C" fn Serializer_SetNodeLabels(g: *mut Graph) {
     (&mut *g).set_node_labels();
 }
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_OptimizedFormConnections(
+unsafe extern "C" fn Serializer_OptimizedFormConnections(
     g: *mut Graph,
     r: RelationID,
     srcs: *const NodeID,
@@ -499,7 +499,7 @@ unsafe extern "C" fn Graph_OptimizedFormConnections(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_AllocEdgeAttributes(
+unsafe extern "C" fn Serializer_AllocEdgeAttributes(
     g: *mut Graph,
     edge_id: EdgeID,
     e: *mut Edge,
@@ -509,7 +509,7 @@ unsafe extern "C" fn Graph_AllocEdgeAttributes(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_MarkNodeDeleted(
+unsafe extern "C" fn Serializer_MarkNodeDeleted(
     g: *mut Graph,
     id: EdgeID,
 ) {
@@ -518,7 +518,7 @@ unsafe extern "C" fn Graph_MarkNodeDeleted(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_MarkEdgeDeleted(
+unsafe extern "C" fn Serializer_MarkEdgeDeleted(
     g: *mut Graph,
     id: EdgeID,
 ) {
@@ -527,14 +527,20 @@ unsafe extern "C" fn Graph_MarkEdgeDeleted(
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_GetDeletedNodesList(g: *mut Graph) -> *mut u64 {
+unsafe extern "C" fn Serializer_GetDeletedNodesList(g: *mut Graph) -> *mut u64 {
     (&*g).get_deleted_nodes_list()
 }
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_GetDeletedEdgesList(g: *mut Graph) -> *mut u64 {
+unsafe extern "C" fn Serializer_GetDeletedEdgesList(g: *mut Graph) -> *mut u64 {
     (&*g).get_deleted_edges_list()
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe extern "C" fn Serializer_UpdateNodeStatistics(g: *mut Graph) {
+    (&mut *g).update_node_statistics()
 }
 
 #[no_mangle]

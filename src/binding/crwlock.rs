@@ -6,7 +6,6 @@
 use std::cell::Cell;
 
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::mem::ManuallyDrop;
 
 thread_local! {
     static READ_GUARD: Cell<Option<RwLockReadGuard<'static, ()>>> = Cell::new(None);
@@ -16,7 +15,7 @@ thread_local! {
 /// Wrap parking_lot rwlock to promote access from C and direct access from Rust.
 /// Used to lock the graph.
 pub struct CRWLock {
-    pub rwlock: RwLock<()>,
+    rwlock: RwLock<()>,
 }
 unsafe impl Send for CRWLock {}
 unsafe impl Sync for CRWLock {}
