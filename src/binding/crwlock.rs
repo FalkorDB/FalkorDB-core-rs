@@ -3,52 +3,50 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
-use std::{cell::UnsafeCell, ptr::null_mut};
+use std::cell::Cell;
 
-use libc::{pthread_rwlock_t, PTHREAD_RWLOCK_INITIALIZER};
+use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::mem::ManuallyDrop;
 
-/// Wrap C rwlock as we can't use Rust RWLock.
+thread_local! {
+    static READ_GUARD: Cell<Option<RwLockReadGuard<'static, ()>>> = Cell::new(None);
+    static WRITE_GUARD: Cell<Option<RwLockWriteGuard<'static, ()>>> = Cell::new(None);
+}
+
+/// Wrap parking_lot rwlock to promote access from C and direct access from Rust.
 /// Used to lock the graph.
 pub struct CRWLock {
-    rwlock: UnsafeCell<pthread_rwlock_t>,
+    pub rwlock: RwLock<()>,
 }
+unsafe impl Send for CRWLock {}
+unsafe impl Sync for CRWLock {}
 
 impl CRWLock {
     pub fn new() -> Self {
-        let res = CRWLock {
-            rwlock: UnsafeCell::new(PTHREAD_RWLOCK_INITIALIZER),
-        };
-        unsafe {
-            let res = libc::pthread_rwlock_init(res.rwlock.get(), null_mut());
-            debug_assert!(res == 0, "pthread_rwlock_init failed");
+        CRWLock {
+            rwlock: RwLock::new(()),
         }
-        res
     }
 
+    #[inline]
     pub fn acquire_read(&self) {
+        let guard = self.rwlock.read();
         unsafe {
-            let res = libc::pthread_rwlock_rdlock(self.rwlock.get());
-            debug_assert!(res == 0, "pthread_rwlock_rdlock failed");
+            READ_GUARD.set(Some(std::mem::transmute(guard)));
         }
     }
 
+    #[inline]
     pub fn acquire_write(&self) {
+        let guard = self.rwlock.write();
         unsafe {
-            let res = libc::pthread_rwlock_wrlock(self.rwlock.get());
-            debug_assert!(res == 0, "pthread_rwlock_wrlock failed");
+            WRITE_GUARD.set(Some(std::mem::transmute(guard)));
         }
     }
 
+    #[inline]
     pub fn release(&self) {
-        unsafe {
-            let res = libc::pthread_rwlock_unlock(self.rwlock.get());
-            debug_assert!(res == 0, "pthread_rwlock_unlock failed");
-        }
-    }
-}
-
-impl Drop for CRWLock {
-    fn drop(&mut self) {
-        unsafe { libc::pthread_rwlock_destroy(self.rwlock.get()) };
+        WRITE_GUARD.take();
+        READ_GUARD.take();
     }
 }
