@@ -869,7 +869,7 @@ impl Graph {
 
         self.stats.increment_edge_count(r, srcs.len() as u64);
     }
-    
+
     pub fn update_node_statistics(&mut self) {
         for i in 0..self.labels.len() {
             self.stats.node_count[i] = self.labels[i].nvals();
