@@ -58,13 +58,6 @@ pub struct __sbuf {
     pub _base: *mut ::std::os::raw::c_uchar,
     pub _size: ::std::os::raw::c_int,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of __sbuf"][::std::mem::size_of::<__sbuf>() - 16usize];
-    ["Alignment of __sbuf"][::std::mem::align_of::<__sbuf>() - 8usize];
-    ["Offset of field: __sbuf::_base"][::std::mem::offset_of!(__sbuf, _base) - 0usize];
-    ["Offset of field: __sbuf::_size"][::std::mem::offset_of!(__sbuf, _size) - 8usize];
-};
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __sFILEX {
@@ -114,31 +107,6 @@ pub struct __sFILE {
     pub _blksize: ::std::os::raw::c_int,
     pub _offset: fpos_t,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of __sFILE"][::std::mem::size_of::<__sFILE>() - 152usize];
-    ["Alignment of __sFILE"][::std::mem::align_of::<__sFILE>() - 8usize];
-    ["Offset of field: __sFILE::_p"][::std::mem::offset_of!(__sFILE, _p) - 0usize];
-    ["Offset of field: __sFILE::_r"][::std::mem::offset_of!(__sFILE, _r) - 8usize];
-    ["Offset of field: __sFILE::_w"][::std::mem::offset_of!(__sFILE, _w) - 12usize];
-    ["Offset of field: __sFILE::_flags"][::std::mem::offset_of!(__sFILE, _flags) - 16usize];
-    ["Offset of field: __sFILE::_file"][::std::mem::offset_of!(__sFILE, _file) - 18usize];
-    ["Offset of field: __sFILE::_bf"][::std::mem::offset_of!(__sFILE, _bf) - 24usize];
-    ["Offset of field: __sFILE::_lbfsize"][::std::mem::offset_of!(__sFILE, _lbfsize) - 40usize];
-    ["Offset of field: __sFILE::_cookie"][::std::mem::offset_of!(__sFILE, _cookie) - 48usize];
-    ["Offset of field: __sFILE::_close"][::std::mem::offset_of!(__sFILE, _close) - 56usize];
-    ["Offset of field: __sFILE::_read"][::std::mem::offset_of!(__sFILE, _read) - 64usize];
-    ["Offset of field: __sFILE::_seek"][::std::mem::offset_of!(__sFILE, _seek) - 72usize];
-    ["Offset of field: __sFILE::_write"][::std::mem::offset_of!(__sFILE, _write) - 80usize];
-    ["Offset of field: __sFILE::_ub"][::std::mem::offset_of!(__sFILE, _ub) - 88usize];
-    ["Offset of field: __sFILE::_extra"][::std::mem::offset_of!(__sFILE, _extra) - 104usize];
-    ["Offset of field: __sFILE::_ur"][::std::mem::offset_of!(__sFILE, _ur) - 112usize];
-    ["Offset of field: __sFILE::_ubuf"][::std::mem::offset_of!(__sFILE, _ubuf) - 116usize];
-    ["Offset of field: __sFILE::_nbuf"][::std::mem::offset_of!(__sFILE, _nbuf) - 119usize];
-    ["Offset of field: __sFILE::_lb"][::std::mem::offset_of!(__sFILE, _lb) - 120usize];
-    ["Offset of field: __sFILE::_blksize"][::std::mem::offset_of!(__sFILE, _blksize) - 136usize];
-    ["Offset of field: __sFILE::_offset"][::std::mem::offset_of!(__sFILE, _offset) - 144usize];
-};
 pub type FILE = __sFILE;
 pub type GxB_FC32_t = __BindgenComplex<f32>;
 pub type GxB_FC64_t = __BindgenComplex<f64>;
@@ -7797,6 +7765,9 @@ extern "C" {
 extern "C" {
     pub static mut GrB_LXNOR_LOR_SEMIRING_BOOL: GrB_Semiring;
 }
+extern "C" {
+    pub fn GxB_Matrix_Pending(A: GrB_Matrix, pending: *mut bool) -> GrB_Info;
+}
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum GxB_Print_Level {
@@ -12786,9 +12757,6 @@ extern "C" {
     pub fn GrB_Vector_resize(w: GrB_Vector, nrows_new: GrB_Index) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_Pending(A: GrB_Matrix, pending: *mut bool) -> GrB_Info;
-}
-extern "C" {
     pub fn GxB_Type_fprint(
         type_: GrB_Type,
         name: *const ::std::os::raw::c_char,
@@ -13671,47 +13639,6 @@ pub struct GB_Iterator_opaque {
     pub iso: bool,
     pub by_col: bool,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of GB_Iterator_opaque"][::std::mem::size_of::<GB_Iterator_opaque>() - 128usize];
-    ["Alignment of GB_Iterator_opaque"][::std::mem::align_of::<GB_Iterator_opaque>() - 8usize];
-    ["Offset of field: GB_Iterator_opaque::pstart"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, pstart) - 0usize];
-    ["Offset of field: GB_Iterator_opaque::pend"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, pend) - 8usize];
-    ["Offset of field: GB_Iterator_opaque::p"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, p) - 16usize];
-    ["Offset of field: GB_Iterator_opaque::k"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, k) - 24usize];
-    ["Offset of field: GB_Iterator_opaque::header_size"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, header_size) - 32usize];
-    ["Offset of field: GB_Iterator_opaque::pmax"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, pmax) - 40usize];
-    ["Offset of field: GB_Iterator_opaque::avlen"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, avlen) - 48usize];
-    ["Offset of field: GB_Iterator_opaque::avdim"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, avdim) - 56usize];
-    ["Offset of field: GB_Iterator_opaque::anvec"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, anvec) - 64usize];
-    ["Offset of field: GB_Iterator_opaque::Ap"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ap) - 72usize];
-    ["Offset of field: GB_Iterator_opaque::Ah"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ah) - 80usize];
-    ["Offset of field: GB_Iterator_opaque::Ab"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ab) - 88usize];
-    ["Offset of field: GB_Iterator_opaque::Ai"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ai) - 96usize];
-    ["Offset of field: GB_Iterator_opaque::Ax"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ax) - 104usize];
-    ["Offset of field: GB_Iterator_opaque::type_size"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, type_size) - 112usize];
-    ["Offset of field: GB_Iterator_opaque::A_sparsity"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, A_sparsity) - 120usize];
-    ["Offset of field: GB_Iterator_opaque::iso"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, iso) - 124usize];
-    ["Offset of field: GB_Iterator_opaque::by_col"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, by_col) - 125usize];
-};
 pub type GxB_Iterator = *mut GB_Iterator_opaque;
 extern "C" {
     pub fn GxB_Iterator_new(iterator: *mut GxB_Iterator) -> GrB_Info;
