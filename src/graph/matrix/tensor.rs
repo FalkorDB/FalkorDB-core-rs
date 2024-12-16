@@ -4,20 +4,23 @@
  */
 
 use std::{
-    mem::MaybeUninit,
-    ptr::{self, null_mut},
+    mem::MaybeUninit, os::raw::c_void, ptr::{self, null_mut}
 };
 
-use crate::binding::graph::{Edge, EdgeID, NodeID};
+use crate::{
+    binding::graph::{Edge, EdgeID, NodeID},
+    grb_check,
+};
 
 use super::{
     delta_matrix::DeltaMatrix,
     delta_matrix_iter::DeltaMatrixIter,
     GraphBLAS::{
-        GB_Iterator_opaque, GrB_BOOL, GrB_INDEX_MAX, GrB_Info, GrB_UINT64, GrB_Vector,
-        GrB_Vector_free, GrB_Vector_new, GrB_Vector_nvals, GrB_Vector_removeElement,
-        GrB_Vector_setElement_BOOL, GrB_Vector_wait, GrB_WaitMode, GxB_Vector_Iterator_attach,
-        GxB_Vector_Iterator_getIndex, GxB_Vector_Iterator_next, GxB_Vector_Iterator_seek,
+        GB_Iterator_opaque, GrB_BOOL, GrB_INDEX_MAX, GrB_Info, GrB_Matrix_apply, GrB_UINT64,
+        GrB_UnaryOp, GrB_UnaryOp_new, GrB_Vector, GrB_Vector_free, GrB_Vector_new,
+        GrB_Vector_nvals, GrB_Vector_removeElement, GrB_Vector_setElement_BOOL, GrB_Vector_wait,
+        GrB_WaitMode, GxB_Vector_Iterator_attach, GxB_Vector_Iterator_getIndex,
+        GxB_Vector_Iterator_next, GxB_Vector_Iterator_seek,
     },
 };
 
@@ -35,6 +38,42 @@ pub fn clear_msb(meid: EdgeID) -> u64 {
 
 pub struct Tensor {
     pub m: DeltaMatrix,
+}
+
+static mut UNARYOP: GrB_UnaryOp = null_mut();
+
+#[no_mangle]
+#[allow(non_snake_case)]
+unsafe extern "C" fn _free_vectors(
+    z: *mut c_void,
+    x: *const c_void,
+) {
+    // see if entry is a vector
+    let x = *(x as *const EdgeID);
+    if !single_edge(x) {
+        let mut v = clear_msb(x) as GrB_Vector;
+        GrB_Vector_free(&mut v);
+    }
+}
+
+impl Drop for Tensor {
+    fn drop(&mut self) {
+        unsafe {
+            if UNARYOP == null_mut() {
+                grb_check!(GrB_UnaryOp_new(
+                    &mut UNARYOP,
+                    Some(_free_vectors),
+                    GrB_UINT64,
+                    GrB_UINT64
+                ));
+            }
+
+            let m = self.m.m(false).grb_matrix_ref();
+            grb_check!(GrB_Matrix_apply(m, null_mut(), null_mut(), UNARYOP, m, null_mut()));
+            let dp = self.m.dp(false).grb_matrix_ref();
+            grb_check!(GrB_Matrix_apply(dp, null_mut(), null_mut(), UNARYOP, dp, null_mut()));
+        }
+    }
 }
 
 impl Tensor {

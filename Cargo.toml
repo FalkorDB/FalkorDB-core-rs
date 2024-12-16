@@ -12,3 +12,4 @@ falkordb_allocator = []
 [dependencies]
 libc = "0.2.153"
 parking_lot = "0.12.3"
+thread_local = "1.1.8"
