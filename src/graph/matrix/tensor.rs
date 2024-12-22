@@ -45,7 +45,7 @@ static mut UNARYOP: GrB_UnaryOp = null_mut();
 #[no_mangle]
 #[allow(non_snake_case)]
 unsafe extern "C" fn _free_vectors(
-    z: *mut c_void,
+    _z: *mut c_void,
     x: *const c_void,
 ) {
     // see if entry is a vector

@@ -11,7 +11,7 @@ use std::{
 
 use crate::{
     binding::{
-        crwlock::CRWLock,
+        crwlock::{CRWGuard, CRWLock},
         graph::{
             AttributeSet, AttributeSet_Free, DataBlock, DataBlockIterator, DataBlockIterator_Free,
             DataBlockIterator_Next, DataBlock_Accommodate, DataBlock_AllocateItem,
@@ -112,7 +112,6 @@ pub struct Graph {
     relations: Vec<Tensor>,
     zero_matrix: DeltaMatrix,
     crwlock: CRWLock,
-    writelocked: bool,
     matrix_policy: MatrixPolicy,
     stats: GraphStatistics,
     partial: bool,
@@ -149,7 +148,6 @@ impl Graph {
             relations: Vec::new(),
             zero_matrix: DeltaMatrix::new(unsafe { GrB_BOOL }, node_cap, node_cap, false),
             crwlock: CRWLock::new(),
-            writelocked: false,
             matrix_policy: MatrixPolicy::FlushResize,
             stats: GraphStatistics {
                 node_count: Vec::new(),
@@ -159,19 +157,12 @@ impl Graph {
         }
     }
 
-    pub fn acquire_read_lock(&mut self) {
-        self.crwlock.acquire_read();
+    pub fn acquire_read_lock(&mut self) -> CRWGuard {
+        self.crwlock.acquire_read()
     }
 
-    pub fn acquire_write_lock(&mut self) {
-        debug_assert!(!self.writelocked);
-        self.crwlock.acquire_write();
-        self.writelocked = true;
-    }
-
-    pub fn release_lock(&mut self) {
-        self.writelocked = false;
-        self.crwlock.release();
+    pub fn acquire_write_lock(&mut self) -> CRWGuard {
+        self.crwlock.acquire_write()
     }
 
     pub fn apply_all_pending(
@@ -1079,7 +1070,7 @@ mod tests {
     fn test_new_graph() {
         test_init();
         let mut g = Graph::new(16384, 16384);
-        g.acquire_write_lock();
+        let guard = g.acquire_write_lock();
 
         assert_eq!(g.adjacency_matrix.ncols(), g.required_matrix_dim());
         assert_eq!(g.adjacency_matrix.nrows(), g.required_matrix_dim());
@@ -1087,7 +1078,7 @@ mod tests {
 
         assert_eq!(g.node_count(), 0);
 
-        g.release_lock();
+        drop(guard)
     }
 
     #[test]
@@ -1095,7 +1086,7 @@ mod tests {
         test_init();
         let node_count = 16384 / 2;
         let mut g = Graph::new(node_count, node_count);
-        g.acquire_write_lock();
+        let guard = g.acquire_write_lock();
 
         for _ in 0..node_count {
             let mut n = g.reserve_node();
@@ -1107,14 +1098,14 @@ mod tests {
         assert!(g.adjacency_matrix.nrows() >= node_count);
         assert_eq!(g.adjacency_matrix.nvals(), 0);
 
-        g.release_lock();
+        drop(guard);
     }
 
     #[test]
     fn test_remove_nodes() {
         test_init();
         let mut g = Graph::new(32, 32);
-        g.acquire_write_lock();
+        let guard = g.acquire_write_lock();
 
         let mut n1 = g.reserve_node();
         g.create_node(&mut n1, &[]);
@@ -1159,7 +1150,7 @@ mod tests {
         g.delete_edges(edges.as_mut_slice());
         g.delete_nodes(&[n1]);
 
-        g.release_lock();
+        drop(guard);
 
         assert_eq!(g.node_count(), 2);
         assert_eq!(g.edge_count(), 1);
@@ -1169,12 +1160,12 @@ mod tests {
     fn test_get_node() {
         test_init();
         let mut g = Graph::new(16, 16);
-        g.acquire_write_lock();
+        let guard = g.acquire_write_lock();
         for _ in 0..16 {
             let mut n = g.reserve_node();
             g.create_node(&mut n, &[]);
         }
-        g.release_lock();
+        drop(guard);
 
         for i in 0..16 {
             let n = g.get_node(i).unwrap();
@@ -1186,7 +1177,7 @@ mod tests {
     fn test_get_edge() {
         test_init();
         let mut g = Graph::new(5, 55);
-        g.acquire_write_lock();
+        let guard = g.acquire_write_lock();
         for _ in 0..5 {
             let mut n = g.reserve_node();
             g.create_node(&mut n, &[]);
@@ -1209,7 +1200,7 @@ mod tests {
         g.create_edge(1, 2, relations[1], &mut e);
         g.create_edge(2, 3, relations[2], &mut e);
         g.create_edge(3, 4, relations[3], &mut e);
-        g.release_lock();
+        drop(guard);
 
         for i in 0..5 {
             let mut e = Edge {

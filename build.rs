@@ -23,6 +23,7 @@ fn main() {
             println!("cargo:rustc-link-arg=-L/opt/homebrew/opt/libomp/lib");
             println!("cargo:rustc-link-arg=-L/usr/lib/llvm-17/lib");
             println!("cargo:rustc-link-arg=-L/usr/lib/llvm-18/lib/");
+            println!("cargo:rustc-link-arg=-L/usr/lib/llvm-19/lib/");
             println!("cargo:rustc-link-arg=-lomp");
         } else {
             println!("cargo:rustc-link-arg=-lgomp");

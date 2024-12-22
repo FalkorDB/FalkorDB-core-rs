@@ -5,9 +5,12 @@
 
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 
-use crate::binding::graph::{
-    DataBlockIterator, DataBlock_ItemIsDeleted, Edge, EdgeID, GraphEntity, LabelID, Node, NodeID,
-    RelationID,
+use crate::binding::{
+    crwlock::CRWGuard,
+    graph::{
+        DataBlockIterator, DataBlock_ItemIsDeleted, Edge, EdgeID, GraphEntity, LabelID, Node,
+        NodeID, RelationID,
+    },
 };
 
 use super::{
@@ -20,20 +23,23 @@ use super::{
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_AcquireReadLock(g: *mut Graph) {
-    (&mut *g).acquire_read_lock();
+unsafe extern "C" fn Graph_AcquireReadLock(g: *mut Graph) -> CRWGuard {
+    (&mut *g).acquire_read_lock()
 }
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_AcquireWriteLock(g: *mut Graph) {
-    (&mut *g).acquire_write_lock();
+unsafe extern "C" fn Graph_AcquireWriteLock(g: *mut Graph) -> CRWGuard {
+    (&mut *g).acquire_write_lock()
 }
 
 #[no_mangle]
 #[allow(non_snake_case)]
-unsafe extern "C" fn Graph_ReleaseLock(g: *mut Graph) {
-    (&mut *g).release_lock();
+unsafe extern "C" fn Graph_ReleaseLock(
+    g: *mut Graph,
+    guard: CRWGuard,
+) {
+    drop(guard);
 }
 
 #[no_mangle]
