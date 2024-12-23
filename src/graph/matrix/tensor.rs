@@ -4,7 +4,7 @@
  */
 
 use std::{
-    mem::MaybeUninit, os::raw::c_void, ptr::{self, null_mut}
+    mem::MaybeUninit, os::raw::c_void, ptr::{self, null_mut}, sync::Once
 };
 
 use crate::{
@@ -40,6 +40,7 @@ pub struct Tensor {
     pub m: DeltaMatrix,
 }
 
+static INIT: Once = Once::new();
 static mut UNARYOP: GrB_UnaryOp = null_mut();
 
 #[no_mangle]
@@ -59,14 +60,14 @@ unsafe extern "C" fn _free_vectors(
 impl Drop for Tensor {
     fn drop(&mut self) {
         unsafe {
-            if UNARYOP == null_mut() {
+            INIT.call_once(|| {
                 grb_check!(GrB_UnaryOp_new(
                     &mut UNARYOP,
                     Some(_free_vectors),
                     GrB_UINT64,
                     GrB_UINT64
                 ));
-            }
+            });
 
             let m = self.m.m(false).grb_matrix_ref();
             grb_check!(GrB_Matrix_apply(m, null_mut(), null_mut(), UNARYOP, m, null_mut()));
