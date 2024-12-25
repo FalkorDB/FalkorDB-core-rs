@@ -3,7 +3,7 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
-use super::{
+ use super::{
     delta_matrix::DeltaMatrix, sparse_matrix_iter::SparseMatrixIter, GraphBLAS::GrB_Index,
 };
 
@@ -17,24 +17,20 @@ pub struct DeltaMatrixIter<'a> {
 }
 
 impl<'a> DeltaMatrixIter<'a> {
-    #[cfg(test)]
-    pub fn new(m: &'a DeltaMatrix) -> DeltaMatrixIter<'a> {
+    pub fn new_range(
+        m: &'a DeltaMatrix,
+        min_row: u64,
+        max_row: u64,
+        transpose: bool,
+    ) -> DeltaMatrixIter<'a> {
         DeltaMatrixIter {
             matrix: Some(m),
-            min_row: 0,
-            max_row: u64::MAX,
-            m_it: SparseMatrixIter::new(m.m(), 0, u64::MAX),
-            dp_it: SparseMatrixIter::new(m.dp(), 0, u64::MAX),
-            dm_it: SparseMatrixIter::new(m.dm(), 0, u64::MAX),
+            min_row: min_row,
+            max_row: max_row,
+            m_it: SparseMatrixIter::new(m.m(transpose), min_row, max_row),
+            dp_it: SparseMatrixIter::new(m.dp(transpose), min_row, max_row),
+            dm_it: SparseMatrixIter::new(m.dm(transpose), min_row, max_row),
         }
-    }
-
-    /// Initialize the iterator to iterate over [`DeltaMatrix`].
-    pub fn attach(
-        &mut self,
-        m: &'a DeltaMatrix,
-    ) {
-        self.attach_range(m, 0, u64::MAX);
     }
 
     /// Initialize the iterator to iterate over [`DeltaMatrix`] within row range.
@@ -43,13 +39,14 @@ impl<'a> DeltaMatrixIter<'a> {
         m: &'a DeltaMatrix,
         min_row: u64,
         max_row: u64,
+        transpose: bool,
     ) {
         self.matrix = Some(m);
         self.min_row = min_row;
         self.max_row = max_row;
-        self.m_it = SparseMatrixIter::new(m.m(), min_row, max_row);
-        self.dp_it = SparseMatrixIter::new(m.dp(), min_row, max_row);
-        self.dm_it = SparseMatrixIter::new(m.dm(), min_row, max_row);
+        self.m_it = SparseMatrixIter::new(m.m(transpose), min_row, max_row);
+        self.dp_it = SparseMatrixIter::new(m.dp(transpose), min_row, max_row);
+        self.dm_it = SparseMatrixIter::new(m.dm(transpose), min_row, max_row);
     }
 
     /// Detach the iterator from specific matrix
@@ -62,24 +59,7 @@ impl<'a> DeltaMatrixIter<'a> {
         &self,
         m: &DeltaMatrix,
     ) -> bool {
-        self.matrix.is_some() && std::ptr::eq(self.matrix.unwrap().m(), m.m())
-    }
-
-    /// Constraint the iterator to iterate over specific row.
-    pub fn iterate_row(
-        &mut self,
-        row_idx: u64,
-    ) {
-        self.attach_range(self.matrix.unwrap(), row_idx, row_idx);
-    }
-
-    /// Constraint the iterator to iterate over specific row range.
-    pub fn iterate_range(
-        &mut self,
-        start_row_idx: u64,
-        end_row_idx: u64,
-    ) {
-        self.attach_range(self.matrix.unwrap(), start_row_idx, end_row_idx);
+        self.matrix.is_some() && std::ptr::eq(self.matrix.unwrap().m(false), m.m(false))
     }
 
     /// Returns the next bool of this [`DeltaMatrixIter`].
@@ -151,11 +131,6 @@ impl<'a> DeltaMatrixIter<'a> {
 
         Ok(None)
     }
-
-    /// Reset this [`DeltaMatrixIter`] to start from the beggining.
-    pub fn reset(&mut self) {
-        self.attach_range(self.matrix.unwrap(), self.min_row, self.max_row);
-    }
 }
 
 #[cfg(test)]
@@ -178,8 +153,7 @@ mod tests {
         let nrows = 100;
         let ncols = 100;
         let a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
-        let mut it = DeltaMatrixIter::new(&a);
-        it.attach(&a);
+        let mut it = DeltaMatrixIter::new_range(&a, 0, u64::MAX, false);
 
         assert!(it.is_attached(&a));
 
@@ -200,7 +174,7 @@ mod tests {
         a.remove_element(1, 2);
         a.set_element_bool(2, 3);
 
-        let mut it = DeltaMatrixIter::new(&a);
+        let mut it = DeltaMatrixIter::new_range(&a, 0, u64::MAX, false);
 
         assert!(it.is_attached(&a));
         assert_eq!(it.next_bool(), Ok(Some((2u64, 3u64))));
