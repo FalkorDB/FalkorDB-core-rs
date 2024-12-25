@@ -3,7 +3,7 @@
  * Licensed under the Server Side Public License v1 (SSPLv1).
  */
 
- use super::{
+use super::{
     delta_matrix::DeltaMatrix, sparse_matrix_iter::SparseMatrixIter, GraphBLAS::GrB_Index,
 };
 
