@@ -557,8 +557,8 @@ mod tests {
 
     fn test_init() {
         unsafe {
-            GrB_init(GrB_Mode::GrB_NONBLOCKING);
-            GxB_Global_Option_set(GxB_Option_Field::GxB_FORMAT, GxB_Format_Value::GxB_BY_ROW);
+            GrB_init(GrB_Mode::GrB_NONBLOCKING as _);
+            GxB_Global_Option_set(GxB_Option_Field::GxB_FORMAT as _, GxB_Format_Value::GxB_BY_ROW);
             Config_Option_set(
                 ConfigOptionField::DELTA_MAX_PENDING_CHANGES,
                 "10000\0".as_ptr() as *const c_char,

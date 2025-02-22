@@ -169,7 +169,7 @@ mod tests {
     use super::DeltaMatrixIter;
 
     fn test_init() {
-        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING) };
+        unsafe { GrB_init(GrB_Mode::GrB_NONBLOCKING as _) };
     }
 
     #[test]
