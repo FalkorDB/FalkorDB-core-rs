@@ -6,17 +6,14 @@
 use std::{mem::MaybeUninit, ptr::null_mut};
 
 use crate::graph::matrix::GraphBLAS::{
-    GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Matrix_apply, GrB_Matrix_assign_Scalar, GrB_Matrix_clear,
-    GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free, GrB_Matrix_removeElement,
-    GrB_Matrix_setElement_BOOL, GrB_Matrix_setElement_UINT64, GrB_WaitMode, GrB_mxm,
-    GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field,
+    GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Matrix_apply, GrB_Matrix_assign_Scalar, GrB_Matrix_clear, GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free, GrB_Matrix_get_INT32, GrB_Matrix_removeElement, GrB_Matrix_setElement_BOOL, GrB_Matrix_setElement_UINT64, GrB_WaitMode, GrB_mxm, GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field
 };
 
 use super::GraphBLAS::{
     GrB_BinaryOp, GrB_Descriptor, GrB_Index, GrB_Info, GrB_Matrix, GrB_Matrix_assign,
     GrB_Matrix_extractElement_BOOL, GrB_Matrix_extractElement_UINT64, GrB_Matrix_ncols,
     GrB_Matrix_new, GrB_Matrix_nrows, GrB_Matrix_nvals, GrB_Matrix_resize, GrB_Matrix_wait,
-    GrB_Scalar, GrB_Semiring, GrB_Type, GrB_transpose, GxB_Matrix_Pending,
+    GrB_Scalar, GrB_Semiring, GrB_Type, GrB_transpose,
 };
 
 #[macro_export]
@@ -71,7 +68,7 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GxB_Matrix_Option_set(
                 self.0,
-                GxB_Option_Field::GxB_HYPER_SWITCH,
+                GxB_Option_Field::GxB_HYPER_SWITCH as _,
                 GxB_ALWAYS_HYPER
             ));
         }
@@ -84,7 +81,7 @@ impl SparseMatrix {
         unsafe {
             grb_check!(GxB_Matrix_Option_set(
                 self.0,
-                GxB_Option_Field::GxB_SPARSITY_CONTROL,
+                GxB_Option_Field::GxB_SPARSITY_CONTROL as _,
                 sparsity
             ));
         }
@@ -230,15 +227,15 @@ impl SparseMatrix {
 
     pub fn pending(&self) -> bool {
         unsafe {
-            let mut pending: MaybeUninit<bool> = MaybeUninit::uninit();
-            grb_check!(GxB_Matrix_Pending(self.0, pending.as_mut_ptr()));
-            pending.assume_init()
+            let mut pending: MaybeUninit<i32> = MaybeUninit::uninit();
+            grb_check!(GrB_Matrix_get_INT32(self.0, pending.as_mut_ptr(), GxB_Option_Field::GxB_WILL_WAIT as _));
+            pending.assume_init() == 1
         }
     }
 
     pub fn wait(&mut self) {
         unsafe {
-            grb_check!(GrB_Matrix_wait(self.0, GrB_WaitMode::GrB_MATERIALIZE));
+            grb_check!(GrB_Matrix_wait(self.0, GrB_WaitMode::GrB_MATERIALIZE as _));
         }
     }
 
