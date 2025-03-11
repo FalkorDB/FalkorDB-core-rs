@@ -40,7 +40,10 @@ unsafe extern "C" fn Delta_Matrix_M(c: _Matrix) -> GrB_Matrix {
 }
 
 #[no_mangle]
-unsafe extern "C" fn Delta_Matrix_setM(c: _Matrix, m: GrB_Matrix) -> GrB_Info {
+unsafe extern "C" fn Delta_Matrix_setM(
+    c: _Matrix,
+    m: GrB_Matrix,
+) -> GrB_Info {
     (&mut *c).set_m(m);
     GrB_Info::GrB_SUCCESS
 }
