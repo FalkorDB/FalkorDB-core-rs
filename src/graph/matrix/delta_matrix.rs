@@ -12,8 +12,9 @@ use crate::binding::graph::{ConfigOptionField, Config_Option_get};
 use super::{
     sparse_matrix::SparseMatrix,
     GraphBLAS::{
-        GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_Scalar_free,
-        GrB_Scalar_new, GrB_Semiring, GrB_Type, GxB_ANY_PAIR_BOOL, GxB_HYPERSPARSE, GxB_SPARSE,
+        GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_Matrix,
+        GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type, GxB_ANY_PAIR_BOOL,
+        GxB_HYPERSPARSE, GxB_SPARSE,
     },
 };
 
@@ -128,6 +129,18 @@ impl DeltaMatrix {
     /// Returns a reference to the m of this [`DeltaMatrix`].
     pub fn m(&self) -> &SparseMatrix {
         &self.matrix
+    }
+
+    /// Set the m of this [`DeltaMatrix`].
+    pub fn set_m(
+        &mut self,
+        m: GrB_Matrix,
+    ) {
+        debug_assert_eq!(self.m().nvals(), 0);
+        debug_assert_eq!(self.dp().nvals(), 0);
+        debug_assert_eq!(self.dm().nvals(), 0);
+
+        self.matrix = SparseMatrix::from(m);
     }
 
     /// Returns a reference to the delta plus of this [`DeltaMatrix`].
@@ -558,7 +571,10 @@ mod tests {
     fn test_init() {
         unsafe {
             GrB_init(GrB_Mode::GrB_NONBLOCKING as _);
-            GxB_Global_Option_set(GxB_Option_Field::GxB_FORMAT as _, GxB_Format_Value::GxB_BY_ROW);
+            GxB_Global_Option_set(
+                GxB_Option_Field::GxB_FORMAT as _,
+                GxB_Format_Value::GxB_BY_ROW,
+            );
             Config_Option_set(
                 ConfigOptionField::DELTA_MAX_PENDING_CHANGES,
                 "10000\0".as_ptr() as *const c_char,
