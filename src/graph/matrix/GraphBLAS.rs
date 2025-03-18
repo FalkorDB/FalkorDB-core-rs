@@ -59,13 +59,6 @@ pub struct __sbuf {
     pub _base: *mut ::std::os::raw::c_uchar,
     pub _size: ::std::os::raw::c_int,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of __sbuf"][::std::mem::size_of::<__sbuf>() - 16usize];
-    ["Alignment of __sbuf"][::std::mem::align_of::<__sbuf>() - 8usize];
-    ["Offset of field: __sbuf::_base"][::std::mem::offset_of!(__sbuf, _base) - 0usize];
-    ["Offset of field: __sbuf::_size"][::std::mem::offset_of!(__sbuf, _size) - 8usize];
-};
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __sFILEX {
@@ -115,31 +108,6 @@ pub struct __sFILE {
     pub _blksize: ::std::os::raw::c_int,
     pub _offset: fpos_t,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of __sFILE"][::std::mem::size_of::<__sFILE>() - 152usize];
-    ["Alignment of __sFILE"][::std::mem::align_of::<__sFILE>() - 8usize];
-    ["Offset of field: __sFILE::_p"][::std::mem::offset_of!(__sFILE, _p) - 0usize];
-    ["Offset of field: __sFILE::_r"][::std::mem::offset_of!(__sFILE, _r) - 8usize];
-    ["Offset of field: __sFILE::_w"][::std::mem::offset_of!(__sFILE, _w) - 12usize];
-    ["Offset of field: __sFILE::_flags"][::std::mem::offset_of!(__sFILE, _flags) - 16usize];
-    ["Offset of field: __sFILE::_file"][::std::mem::offset_of!(__sFILE, _file) - 18usize];
-    ["Offset of field: __sFILE::_bf"][::std::mem::offset_of!(__sFILE, _bf) - 24usize];
-    ["Offset of field: __sFILE::_lbfsize"][::std::mem::offset_of!(__sFILE, _lbfsize) - 40usize];
-    ["Offset of field: __sFILE::_cookie"][::std::mem::offset_of!(__sFILE, _cookie) - 48usize];
-    ["Offset of field: __sFILE::_close"][::std::mem::offset_of!(__sFILE, _close) - 56usize];
-    ["Offset of field: __sFILE::_read"][::std::mem::offset_of!(__sFILE, _read) - 64usize];
-    ["Offset of field: __sFILE::_seek"][::std::mem::offset_of!(__sFILE, _seek) - 72usize];
-    ["Offset of field: __sFILE::_write"][::std::mem::offset_of!(__sFILE, _write) - 80usize];
-    ["Offset of field: __sFILE::_ub"][::std::mem::offset_of!(__sFILE, _ub) - 88usize];
-    ["Offset of field: __sFILE::_extra"][::std::mem::offset_of!(__sFILE, _extra) - 104usize];
-    ["Offset of field: __sFILE::_ur"][::std::mem::offset_of!(__sFILE, _ur) - 112usize];
-    ["Offset of field: __sFILE::_ubuf"][::std::mem::offset_of!(__sFILE, _ubuf) - 116usize];
-    ["Offset of field: __sFILE::_nbuf"][::std::mem::offset_of!(__sFILE, _nbuf) - 119usize];
-    ["Offset of field: __sFILE::_lb"][::std::mem::offset_of!(__sFILE, _lb) - 120usize];
-    ["Offset of field: __sFILE::_blksize"][::std::mem::offset_of!(__sFILE, _blksize) - 136usize];
-    ["Offset of field: __sFILE::_offset"][::std::mem::offset_of!(__sFILE, _offset) - 144usize];
-};
 pub type FILE = __sFILE;
 pub type GxB_FC32_t = __BindgenComplex<f32>;
 pub type GxB_FC64_t = __BindgenComplex<f64>;
@@ -7849,7 +7817,10 @@ extern "C" {
     pub fn GrB_Descriptor_new(descriptor: *mut GrB_Descriptor) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Type_new(type_: *mut GrB_Type, sizeof_ctype: usize) -> GrB_Info;
+    pub fn GrB_Type_new(
+        type_: *mut GrB_Type,
+        sizeof_ctype: usize,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Type_new(
@@ -7950,8 +7921,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Monoid_new_INT8(monoid: *mut GrB_Monoid, op: GrB_BinaryOp, identity: i8)
-        -> GrB_Info;
+    pub fn GrB_Monoid_new_INT8(
+        monoid: *mut GrB_Monoid,
+        op: GrB_BinaryOp,
+        identity: i8,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Monoid_new_INT16(
@@ -8157,128 +8131,245 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_new(s: *mut GrB_Scalar, type_: GrB_Type) -> GrB_Info;
+    pub fn GrB_Scalar_new(
+        s: *mut GrB_Scalar,
+        type_: GrB_Type,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_dup(s: *mut GrB_Scalar, t: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_dup(
+        s: *mut GrB_Scalar,
+        t: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Scalar_clear(s: GrB_Scalar) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_nvals(nvals: *mut GrB_Index, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_nvals(
+        nvals: *mut GrB_Index,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_memoryUsage(size: *mut usize, s: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_memoryUsage(
+        size: *mut usize,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_type(type_: *mut GrB_Type, s: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_type(
+        type_: *mut GrB_Type,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_BOOL(s: GrB_Scalar, x: bool) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_BOOL(
+        s: GrB_Scalar,
+        x: bool,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_INT8(s: GrB_Scalar, x: i8) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_INT8(
+        s: GrB_Scalar,
+        x: i8,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_INT16(s: GrB_Scalar, x: i16) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_INT16(
+        s: GrB_Scalar,
+        x: i16,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_INT32(s: GrB_Scalar, x: i32) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_INT32(
+        s: GrB_Scalar,
+        x: i32,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_INT64(s: GrB_Scalar, x: i64) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_INT64(
+        s: GrB_Scalar,
+        x: i64,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_UINT8(s: GrB_Scalar, x: u8) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_UINT8(
+        s: GrB_Scalar,
+        x: u8,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_UINT16(s: GrB_Scalar, x: u16) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_UINT16(
+        s: GrB_Scalar,
+        x: u16,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_UINT32(s: GrB_Scalar, x: u32) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_UINT32(
+        s: GrB_Scalar,
+        x: u32,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_UINT64(s: GrB_Scalar, x: u64) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_UINT64(
+        s: GrB_Scalar,
+        x: u64,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_FP32(s: GrB_Scalar, x: f32) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_FP32(
+        s: GrB_Scalar,
+        x: f32,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_FP64(s: GrB_Scalar, x: f64) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_FP64(
+        s: GrB_Scalar,
+        x: f64,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_FC32(s: GrB_Scalar, x: GxB_FC32_t) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_FC32(
+        s: GrB_Scalar,
+        x: GxB_FC32_t,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_FC64(s: GrB_Scalar, x: GxB_FC64_t) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_FC64(
+        s: GrB_Scalar,
+        x: GxB_FC64_t,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_setElement_UDT(s: GrB_Scalar, x: *mut ::std::os::raw::c_void) -> GrB_Info;
+    pub fn GrB_Scalar_setElement_UDT(
+        s: GrB_Scalar,
+        x: *mut ::std::os::raw::c_void,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_BOOL(x: *mut bool, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_BOOL(
+        x: *mut bool,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_INT8(x: *mut i8, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_INT8(
+        x: *mut i8,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_INT16(x: *mut i16, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_INT16(
+        x: *mut i16,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_INT32(x: *mut i32, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_INT32(
+        x: *mut i32,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_INT64(x: *mut i64, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_INT64(
+        x: *mut i64,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_UINT8(x: *mut u8, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_UINT8(
+        x: *mut u8,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_UINT16(x: *mut u16, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_UINT16(
+        x: *mut u16,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_UINT32(x: *mut u32, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_UINT32(
+        x: *mut u32,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_UINT64(x: *mut u64, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_UINT64(
+        x: *mut u64,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_FP32(x: *mut f32, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_FP32(
+        x: *mut f32,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_FP64(x: *mut f64, s: GrB_Scalar) -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_FP64(
+        x: *mut f64,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_FC32(x: *mut GxB_FC32_t, s: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_FC32(
+        x: *mut GxB_FC32_t,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_FC64(x: *mut GxB_FC64_t, s: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_FC64(
+        x: *mut GxB_FC64_t,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_extractElement_UDT(x: *mut ::std::os::raw::c_void, s: GrB_Scalar)
-        -> GrB_Info;
+    pub fn GrB_Scalar_extractElement_UDT(
+        x: *mut ::std::os::raw::c_void,
+        s: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_new(v: *mut GrB_Vector, type_: GrB_Type, n: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_new(
+        v: *mut GrB_Vector,
+        type_: GrB_Type,
+        n: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_dup(w: *mut GrB_Vector, u: GrB_Vector) -> GrB_Info;
+    pub fn GrB_Vector_dup(
+        w: *mut GrB_Vector,
+        u: GrB_Vector,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Vector_clear(v: GrB_Vector) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_size(n: *mut GrB_Index, v: GrB_Vector) -> GrB_Info;
+    pub fn GrB_Vector_size(
+        n: *mut GrB_Index,
+        v: GrB_Vector,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_nvals(nvals: *mut GrB_Index, v: GrB_Vector) -> GrB_Info;
+    pub fn GrB_Vector_nvals(
+        nvals: *mut GrB_Index,
+        v: GrB_Vector,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_memoryUsage(size: *mut usize, v: GrB_Vector) -> GrB_Info;
+    pub fn GxB_Vector_memoryUsage(
+        size: *mut usize,
+        v: GrB_Vector,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_type(type_: *mut GrB_Type, v: GrB_Vector) -> GrB_Info;
+    pub fn GxB_Vector_type(
+        type_: *mut GrB_Type,
+        v: GrB_Vector,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Vector_build_BOOL(
@@ -8432,43 +8523,95 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_BOOL(w: GrB_Vector, x: bool, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_BOOL(
+        w: GrB_Vector,
+        x: bool,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_INT8(w: GrB_Vector, x: i8, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_INT8(
+        w: GrB_Vector,
+        x: i8,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_INT16(w: GrB_Vector, x: i16, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_INT16(
+        w: GrB_Vector,
+        x: i16,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_INT32(w: GrB_Vector, x: i32, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_INT32(
+        w: GrB_Vector,
+        x: i32,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_INT64(w: GrB_Vector, x: i64, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_INT64(
+        w: GrB_Vector,
+        x: i64,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_UINT8(w: GrB_Vector, x: u8, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_UINT8(
+        w: GrB_Vector,
+        x: u8,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_UINT16(w: GrB_Vector, x: u16, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_UINT16(
+        w: GrB_Vector,
+        x: u16,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_UINT32(w: GrB_Vector, x: u32, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_UINT32(
+        w: GrB_Vector,
+        x: u32,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_UINT64(w: GrB_Vector, x: u64, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_UINT64(
+        w: GrB_Vector,
+        x: u64,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_FP32(w: GrB_Vector, x: f32, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_FP32(
+        w: GrB_Vector,
+        x: f32,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_FP64(w: GrB_Vector, x: f64, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_FP64(
+        w: GrB_Vector,
+        x: f64,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_setElement_FC32(w: GrB_Vector, x: GxB_FC32_t, i: GrB_Index) -> GrB_Info;
+    pub fn GxB_Vector_setElement_FC32(
+        w: GrB_Vector,
+        x: GxB_FC32_t,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_setElement_FC64(w: GrB_Vector, x: GxB_FC64_t, i: GrB_Index) -> GrB_Info;
+    pub fn GxB_Vector_setElement_FC64(
+        w: GrB_Vector,
+        x: GxB_FC64_t,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Vector_setElement_UDT(
@@ -8478,40 +8621,88 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_setElement_Scalar(w: GrB_Vector, x: GrB_Scalar, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_setElement_Scalar(
+        w: GrB_Vector,
+        x: GrB_Scalar,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_BOOL(x: *mut bool, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_BOOL(
+        x: *mut bool,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_INT8(x: *mut i8, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_INT8(
+        x: *mut i8,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_INT16(x: *mut i16, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_INT16(
+        x: *mut i16,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_INT32(x: *mut i32, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_INT32(
+        x: *mut i32,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_INT64(x: *mut i64, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_INT64(
+        x: *mut i64,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_UINT8(x: *mut u8, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_UINT8(
+        x: *mut u8,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_UINT16(x: *mut u16, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_UINT16(
+        x: *mut u16,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_UINT32(x: *mut u32, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_UINT32(
+        x: *mut u32,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_UINT64(x: *mut u64, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_UINT64(
+        x: *mut u64,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_FP32(x: *mut f32, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_FP32(
+        x: *mut f32,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_FP64(x: *mut f64, v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_extractElement_FP64(
+        x: *mut f64,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Vector_extractElement_FC32(
@@ -8535,14 +8726,23 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_extractElement_Scalar(x: GrB_Scalar, v: GrB_Vector, i: GrB_Index)
-        -> GrB_Info;
+    pub fn GrB_Vector_extractElement_Scalar(
+        x: GrB_Scalar,
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_isStoredElement(v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GxB_Vector_isStoredElement(
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_removeElement(v: GrB_Vector, i: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_removeElement(
+        v: GrB_Vector,
+        i: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Vector_extractTuples_BOOL(
@@ -8673,25 +8873,43 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_dup(C: *mut GrB_Matrix, A: GrB_Matrix) -> GrB_Info;
+    pub fn GrB_Matrix_dup(
+        C: *mut GrB_Matrix,
+        A: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Matrix_clear(A: GrB_Matrix) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_nrows(nrows: *mut GrB_Index, A: GrB_Matrix) -> GrB_Info;
+    pub fn GrB_Matrix_nrows(
+        nrows: *mut GrB_Index,
+        A: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_ncols(ncols: *mut GrB_Index, A: GrB_Matrix) -> GrB_Info;
+    pub fn GrB_Matrix_ncols(
+        ncols: *mut GrB_Index,
+        A: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_nvals(nvals: *mut GrB_Index, A: GrB_Matrix) -> GrB_Info;
+    pub fn GrB_Matrix_nvals(
+        nvals: *mut GrB_Index,
+        A: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_memoryUsage(size: *mut usize, A: GrB_Matrix) -> GrB_Info;
+    pub fn GxB_Matrix_memoryUsage(
+        size: *mut usize,
+        A: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_type(type_: *mut GrB_Type, A: GrB_Matrix) -> GrB_Info;
+    pub fn GxB_Matrix_type(
+        type_: *mut GrB_Type,
+        A: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Matrix_build_BOOL(
@@ -8878,8 +9096,12 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_setElement_INT8(C: GrB_Matrix, x: i8, i: GrB_Index, j: GrB_Index)
-        -> GrB_Info;
+    pub fn GrB_Matrix_setElement_INT8(
+        C: GrB_Matrix,
+        x: i8,
+        i: GrB_Index,
+        j: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Matrix_setElement_INT16(
@@ -9098,10 +9320,18 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_isStoredElement(A: GrB_Matrix, i: GrB_Index, j: GrB_Index) -> GrB_Info;
+    pub fn GxB_Matrix_isStoredElement(
+        A: GrB_Matrix,
+        i: GrB_Index,
+        j: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_removeElement(C: GrB_Matrix, i: GrB_Index, j: GrB_Index) -> GrB_Info;
+    pub fn GrB_Matrix_removeElement(
+        C: GrB_Matrix,
+        i: GrB_Index,
+        j: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Matrix_extractTuples_BOOL(
@@ -9259,13 +9489,27 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_diag(C: *mut GrB_Matrix, v: GrB_Vector, k: i64) -> GrB_Info;
+    pub fn GrB_Matrix_diag(
+        C: *mut GrB_Matrix,
+        v: GrB_Vector,
+        k: i64,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_diag(C: GrB_Matrix, v: GrB_Vector, k: i64, desc: GrB_Descriptor) -> GrB_Info;
+    pub fn GxB_Matrix_diag(
+        C: GrB_Matrix,
+        v: GrB_Vector,
+        k: i64,
+        desc: GrB_Descriptor,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_diag(v: GrB_Vector, A: GrB_Matrix, k: i64, desc: GrB_Descriptor) -> GrB_Info;
+    pub fn GxB_Vector_diag(
+        v: GrB_Vector,
+        A: GrB_Matrix,
+        k: i64,
+        desc: GrB_Descriptor,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Context_new(Context: *mut GxB_Context) -> GrB_Info;
@@ -10076,8 +10320,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Type_set_INT32(object: GrB_Type, arg1: i32, arg2: ::std::os::raw::c_int)
-        -> GrB_Info;
+    pub fn GrB_Type_set_INT32(
+        object: GrB_Type,
+        arg1: i32,
+        arg2: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_Type_set_VOID(
@@ -10146,13 +10393,22 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Type_wait(object: GrB_Type, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GrB_Type_wait(
+        object: GrB_Type,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_UnaryOp_wait(object: GrB_UnaryOp, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GrB_UnaryOp_wait(
+        object: GrB_UnaryOp,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_BinaryOp_wait(object: GrB_BinaryOp, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GrB_BinaryOp_wait(
+        object: GrB_BinaryOp,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_IndexUnaryOp_wait(
@@ -10167,29 +10423,52 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Monoid_wait(object: GrB_Monoid, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GrB_Monoid_wait(
+        object: GrB_Monoid,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Semiring_wait(object: GrB_Semiring, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GrB_Semiring_wait(
+        object: GrB_Semiring,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Descriptor_wait(object: GrB_Descriptor, waitmode: ::std::os::raw::c_int)
-        -> GrB_Info;
+    pub fn GrB_Descriptor_wait(
+        object: GrB_Descriptor,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Scalar_wait(object: GrB_Scalar, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GrB_Scalar_wait(
+        object: GrB_Scalar,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_wait(object: GrB_Vector, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GrB_Vector_wait(
+        object: GrB_Vector,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_wait(object: GrB_Matrix, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GrB_Matrix_wait(
+        object: GrB_Matrix,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Context_wait(object: GxB_Context, waitmode: ::std::os::raw::c_int) -> GrB_Info;
+    pub fn GxB_Context_wait(
+        object: GxB_Context,
+        waitmode: ::std::os::raw::c_int,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Type_error(error: *mut *const ::std::os::raw::c_char, object: GrB_Type) -> GrB_Info;
+    pub fn GrB_Type_error(
+        error: *mut *const ::std::os::raw::c_char,
+        object: GrB_Type,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GrB_UnaryOp_error(
@@ -13151,11 +13430,17 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_resize(C: GrB_Matrix, nrows_new: GrB_Index, ncols_new: GrB_Index)
-        -> GrB_Info;
+    pub fn GrB_Matrix_resize(
+        C: GrB_Matrix,
+        nrows_new: GrB_Index,
+        ncols_new: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Vector_resize(w: GrB_Vector, nrows_new: GrB_Index) -> GrB_Info;
+    pub fn GrB_Vector_resize(
+        w: GrB_Vector,
+        nrows_new: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Type_fprint(
@@ -13278,53 +13563,6 @@ pub struct GxB_Container_struct {
     pub bool_future: [bool; 30usize],
     pub void_future: [*mut ::std::os::raw::c_void; 16usize],
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of GxB_Container_struct"][::std::mem::size_of::<GxB_Container_struct>() - 608usize];
-    ["Alignment of GxB_Container_struct"][::std::mem::align_of::<GxB_Container_struct>() - 8usize];
-    ["Offset of field: GxB_Container_struct::nrows"]
-        [::std::mem::offset_of!(GxB_Container_struct, nrows) - 0usize];
-    ["Offset of field: GxB_Container_struct::ncols"]
-        [::std::mem::offset_of!(GxB_Container_struct, ncols) - 8usize];
-    ["Offset of field: GxB_Container_struct::nrows_nonempty"]
-        [::std::mem::offset_of!(GxB_Container_struct, nrows_nonempty) - 16usize];
-    ["Offset of field: GxB_Container_struct::ncols_nonempty"]
-        [::std::mem::offset_of!(GxB_Container_struct, ncols_nonempty) - 24usize];
-    ["Offset of field: GxB_Container_struct::nvals"]
-        [::std::mem::offset_of!(GxB_Container_struct, nvals) - 32usize];
-    ["Offset of field: GxB_Container_struct::u64_future"]
-        [::std::mem::offset_of!(GxB_Container_struct, u64_future) - 40usize];
-    ["Offset of field: GxB_Container_struct::format"]
-        [::std::mem::offset_of!(GxB_Container_struct, format) - 128usize];
-    ["Offset of field: GxB_Container_struct::orientation"]
-        [::std::mem::offset_of!(GxB_Container_struct, orientation) - 132usize];
-    ["Offset of field: GxB_Container_struct::u32_future"]
-        [::std::mem::offset_of!(GxB_Container_struct, u32_future) - 136usize];
-    ["Offset of field: GxB_Container_struct::p"]
-        [::std::mem::offset_of!(GxB_Container_struct, p) - 192usize];
-    ["Offset of field: GxB_Container_struct::h"]
-        [::std::mem::offset_of!(GxB_Container_struct, h) - 200usize];
-    ["Offset of field: GxB_Container_struct::b"]
-        [::std::mem::offset_of!(GxB_Container_struct, b) - 208usize];
-    ["Offset of field: GxB_Container_struct::i"]
-        [::std::mem::offset_of!(GxB_Container_struct, i) - 216usize];
-    ["Offset of field: GxB_Container_struct::x"]
-        [::std::mem::offset_of!(GxB_Container_struct, x) - 224usize];
-    ["Offset of field: GxB_Container_struct::vector_future"]
-        [::std::mem::offset_of!(GxB_Container_struct, vector_future) - 232usize];
-    ["Offset of field: GxB_Container_struct::Y"]
-        [::std::mem::offset_of!(GxB_Container_struct, Y) - 320usize];
-    ["Offset of field: GxB_Container_struct::matrix_future"]
-        [::std::mem::offset_of!(GxB_Container_struct, matrix_future) - 328usize];
-    ["Offset of field: GxB_Container_struct::iso"]
-        [::std::mem::offset_of!(GxB_Container_struct, iso) - 448usize];
-    ["Offset of field: GxB_Container_struct::jumbled"]
-        [::std::mem::offset_of!(GxB_Container_struct, jumbled) - 449usize];
-    ["Offset of field: GxB_Container_struct::bool_future"]
-        [::std::mem::offset_of!(GxB_Container_struct, bool_future) - 450usize];
-    ["Offset of field: GxB_Container_struct::void_future"]
-        [::std::mem::offset_of!(GxB_Container_struct, void_future) - 480usize];
-};
 pub type GxB_Container = *mut GxB_Container_struct;
 extern "C" {
     pub fn GxB_Container_new(Container: *mut GxB_Container) -> GrB_Info;
@@ -13767,7 +14005,10 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_exportHint(format: *mut ::std::os::raw::c_int, A: GrB_Matrix) -> GrB_Info;
+    pub fn GrB_Matrix_exportHint(
+        format: *mut ::std::os::raw::c_int,
+        A: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Matrix_serialize(
@@ -13793,7 +14034,10 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GrB_Matrix_serializeSize(blob_size_handle: *mut GrB_Index, A: GrB_Matrix) -> GrB_Info;
+    pub fn GrB_Matrix_serializeSize(
+        blob_size_handle: *mut GrB_Index,
+        A: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Matrix_deserialize(
@@ -13883,53 +14127,7 @@ pub struct GB_Iterator_opaque {
     pub iso: bool,
     pub by_col: bool,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of GB_Iterator_opaque"][::std::mem::size_of::<GB_Iterator_opaque>() - 152usize];
-    ["Alignment of GB_Iterator_opaque"][::std::mem::align_of::<GB_Iterator_opaque>() - 8usize];
-    ["Offset of field: GB_Iterator_opaque::pstart"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, pstart) - 0usize];
-    ["Offset of field: GB_Iterator_opaque::pend"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, pend) - 8usize];
-    ["Offset of field: GB_Iterator_opaque::p"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, p) - 16usize];
-    ["Offset of field: GB_Iterator_opaque::k"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, k) - 24usize];
-    ["Offset of field: GB_Iterator_opaque::header_size"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, header_size) - 32usize];
-    ["Offset of field: GB_Iterator_opaque::pmax"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, pmax) - 40usize];
-    ["Offset of field: GB_Iterator_opaque::avlen"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, avlen) - 48usize];
-    ["Offset of field: GB_Iterator_opaque::avdim"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, avdim) - 56usize];
-    ["Offset of field: GB_Iterator_opaque::anvec"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, anvec) - 64usize];
-    ["Offset of field: GB_Iterator_opaque::Ap32"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ap32) - 72usize];
-    ["Offset of field: GB_Iterator_opaque::Ap64"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ap64) - 80usize];
-    ["Offset of field: GB_Iterator_opaque::Ah32"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ah32) - 88usize];
-    ["Offset of field: GB_Iterator_opaque::Ah64"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ah64) - 96usize];
-    ["Offset of field: GB_Iterator_opaque::Ai32"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ai32) - 104usize];
-    ["Offset of field: GB_Iterator_opaque::Ai64"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ai64) - 112usize];
-    ["Offset of field: GB_Iterator_opaque::Ab"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ab) - 120usize];
-    ["Offset of field: GB_Iterator_opaque::Ax"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, Ax) - 128usize];
-    ["Offset of field: GB_Iterator_opaque::type_size"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, type_size) - 136usize];
-    ["Offset of field: GB_Iterator_opaque::A_sparsity"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, A_sparsity) - 144usize];
-    ["Offset of field: GB_Iterator_opaque::iso"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, iso) - 148usize];
-    ["Offset of field: GB_Iterator_opaque::by_col"]
-        [::std::mem::offset_of!(GB_Iterator_opaque, by_col) - 149usize];
-};
+
 extern "C" {
     pub fn GxB_Iterator_new(iterator: *mut GxB_Iterator) -> GrB_Info;
 }
@@ -13942,7 +14140,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GB_Iterator_rc_seek(iterator: GxB_Iterator, j: GrB_Index, jth_vector: bool) -> GrB_Info;
+    pub fn GB_Iterator_rc_seek(
+        iterator: GxB_Iterator,
+        j: GrB_Index,
+        jth_vector: bool,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GB_Iterator_rc_bitmap_next(iterator: GxB_Iterator) -> GrB_Info;
@@ -13958,10 +14160,16 @@ extern "C" {
     pub fn GxB_rowIterator_kount(iterator: GxB_Iterator) -> GrB_Index;
 }
 extern "C" {
-    pub fn GxB_rowIterator_seekRow(iterator: GxB_Iterator, row: GrB_Index) -> GrB_Info;
+    pub fn GxB_rowIterator_seekRow(
+        iterator: GxB_Iterator,
+        row: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_rowIterator_kseek(iterator: GxB_Iterator, k: GrB_Index) -> GrB_Info;
+    pub fn GxB_rowIterator_kseek(
+        iterator: GxB_Iterator,
+        k: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_rowIterator_nextRow(iterator: GxB_Iterator) -> GrB_Info;
@@ -13986,10 +14194,16 @@ extern "C" {
     pub fn GxB_colIterator_kount(iterator: GxB_Iterator) -> GrB_Index;
 }
 extern "C" {
-    pub fn GxB_colIterator_seekCol(iterator: GxB_Iterator, col: GrB_Index) -> GrB_Info;
+    pub fn GxB_colIterator_seekCol(
+        iterator: GxB_Iterator,
+        col: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_colIterator_kseek(iterator: GxB_Iterator, k: GrB_Index) -> GrB_Info;
+    pub fn GxB_colIterator_kseek(
+        iterator: GxB_Iterator,
+        k: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_colIterator_nextCol(iterator: GxB_Iterator) -> GrB_Info;
@@ -14014,7 +14228,10 @@ extern "C" {
     pub fn GxB_Matrix_Iterator_getpmax(iterator: GxB_Iterator) -> GrB_Index;
 }
 extern "C" {
-    pub fn GxB_Matrix_Iterator_seek(iterator: GxB_Iterator, p: GrB_Index) -> GrB_Info;
+    pub fn GxB_Matrix_Iterator_seek(
+        iterator: GxB_Iterator,
+        p: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Matrix_Iterator_next(iterator: GxB_Iterator) -> GrB_Info;
@@ -14043,7 +14260,10 @@ extern "C" {
     pub fn GB_Vector_Iterator_bitmap_seek(iterator: GxB_Iterator) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_Iterator_seek(iterator: GxB_Iterator, p: GrB_Index) -> GrB_Info;
+    pub fn GxB_Vector_Iterator_seek(
+        iterator: GxB_Iterator,
+        p: GrB_Index,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Vector_Iterator_next(iterator: GxB_Iterator) -> GrB_Info;
@@ -14094,7 +14314,10 @@ extern "C" {
     pub fn GxB_Iterator_get_FC64(iterator: GxB_Iterator) -> GxB_FC64_t;
 }
 extern "C" {
-    pub fn GxB_Iterator_get_UDT(iterator: GxB_Iterator, value: *mut ::std::os::raw::c_void);
+    pub fn GxB_Iterator_get_UDT(
+        iterator: GxB_Iterator,
+        value: *mut ::std::os::raw::c_void,
+    );
 }
 extern "C" {
     pub fn GrB_Type_free(object: *mut GrB_Type) -> GrB_Info;
@@ -14139,10 +14362,16 @@ extern "C" {
     pub fn GxB_Iterator_free(object: *mut GxB_Iterator) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_iso(arg1: *mut bool, arg2: GrB_Matrix) -> GrB_Info;
+    pub fn GxB_Matrix_iso(
+        arg1: *mut bool,
+        arg2: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_iso(arg1: *mut bool, arg2: GrB_Vector) -> GrB_Info;
+    pub fn GxB_Vector_iso(
+        arg1: *mut bool,
+        arg2: GrB_Vector,
+    ) -> GrB_Info;
 }
 pub type GrB_Field = ::std::os::raw::c_int;
 extern "C" {
@@ -14166,7 +14395,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Desc_set(arg1: GrB_Descriptor, arg2: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Desc_set(
+        arg1: GrB_Descriptor,
+        arg2: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Desc_set_INT32(
@@ -14183,7 +14416,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Desc_get(arg1: GrB_Descriptor, arg2: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Desc_get(
+        arg1: GrB_Descriptor,
+        arg2: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Desc_get_INT32(
@@ -14200,27 +14437,46 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Type_name(arg1: *mut ::std::os::raw::c_char, arg2: GrB_Type) -> GrB_Info;
+    pub fn GxB_Type_name(
+        arg1: *mut ::std::os::raw::c_char,
+        arg2: GrB_Type,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Type_size(arg1: *mut usize, arg2: GrB_Type) -> GrB_Info;
+    pub fn GxB_Type_size(
+        arg1: *mut usize,
+        arg2: GrB_Type,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_UnaryOp_ztype(arg1: *mut GrB_Type, arg2: GrB_UnaryOp) -> GrB_Info;
+    pub fn GxB_UnaryOp_ztype(
+        arg1: *mut GrB_Type,
+        arg2: GrB_UnaryOp,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_UnaryOp_ztype_name(arg1: *mut ::std::os::raw::c_char, arg2: GrB_UnaryOp)
-        -> GrB_Info;
+    pub fn GxB_UnaryOp_ztype_name(
+        arg1: *mut ::std::os::raw::c_char,
+        arg2: GrB_UnaryOp,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_UnaryOp_xtype(arg1: *mut GrB_Type, arg2: GrB_UnaryOp) -> GrB_Info;
+    pub fn GxB_UnaryOp_xtype(
+        arg1: *mut GrB_Type,
+        arg2: GrB_UnaryOp,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_UnaryOp_xtype_name(arg1: *mut ::std::os::raw::c_char, arg2: GrB_UnaryOp)
-        -> GrB_Info;
+    pub fn GxB_UnaryOp_xtype_name(
+        arg1: *mut ::std::os::raw::c_char,
+        arg2: GrB_UnaryOp,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_BinaryOp_ztype(arg1: *mut GrB_Type, arg2: GrB_BinaryOp) -> GrB_Info;
+    pub fn GxB_BinaryOp_ztype(
+        arg1: *mut GrB_Type,
+        arg2: GrB_BinaryOp,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_BinaryOp_ztype_name(
@@ -14229,7 +14485,10 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_BinaryOp_xtype(arg1: *mut GrB_Type, arg2: GrB_BinaryOp) -> GrB_Info;
+    pub fn GxB_BinaryOp_xtype(
+        arg1: *mut GrB_Type,
+        arg2: GrB_BinaryOp,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_BinaryOp_xtype_name(
@@ -14238,7 +14497,10 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_BinaryOp_ytype(arg1: *mut GrB_Type, arg2: GrB_BinaryOp) -> GrB_Info;
+    pub fn GxB_BinaryOp_ytype(
+        arg1: *mut GrB_Type,
+        arg2: GrB_BinaryOp,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_BinaryOp_ytype_name(
@@ -14265,10 +14527,16 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Monoid_operator(arg1: *mut GrB_BinaryOp, arg2: GrB_Monoid) -> GrB_Info;
+    pub fn GxB_Monoid_operator(
+        arg1: *mut GrB_BinaryOp,
+        arg2: GrB_Monoid,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Monoid_identity(arg1: *mut ::std::os::raw::c_void, arg2: GrB_Monoid) -> GrB_Info;
+    pub fn GxB_Monoid_identity(
+        arg1: *mut ::std::os::raw::c_void,
+        arg2: GrB_Monoid,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Monoid_terminal(
@@ -14278,61 +14546,112 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Semiring_add(arg1: *mut GrB_Monoid, arg2: GrB_Semiring) -> GrB_Info;
+    pub fn GxB_Semiring_add(
+        arg1: *mut GrB_Monoid,
+        arg2: GrB_Semiring,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Semiring_multiply(arg1: *mut GrB_BinaryOp, arg2: GrB_Semiring) -> GrB_Info;
+    pub fn GxB_Semiring_multiply(
+        arg1: *mut GrB_BinaryOp,
+        arg2: GrB_Semiring,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_type_name(arg1: *mut ::std::os::raw::c_char, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_type_name(
+        arg1: *mut ::std::os::raw::c_char,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_new(arg1: *mut GrB_Scalar, arg2: GrB_Type) -> GrB_Info;
+    pub fn GxB_Scalar_new(
+        arg1: *mut GrB_Scalar,
+        arg2: GrB_Type,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_dup(arg1: *mut GrB_Scalar, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_dup(
+        arg1: *mut GrB_Scalar,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Scalar_clear(arg1: GrB_Scalar) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_nvals(arg1: *mut u64, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_nvals(
+        arg1: *mut u64,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Scalar_free(arg1: *mut GrB_Scalar) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_BOOL(arg1: GrB_Scalar, arg2: bool) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_BOOL(
+        arg1: GrB_Scalar,
+        arg2: bool,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_INT8(arg1: GrB_Scalar, arg2: i8) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_INT8(
+        arg1: GrB_Scalar,
+        arg2: i8,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_INT16(arg1: GrB_Scalar, arg2: i16) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_INT16(
+        arg1: GrB_Scalar,
+        arg2: i16,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_INT32(arg1: GrB_Scalar, arg2: i32) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_INT32(
+        arg1: GrB_Scalar,
+        arg2: i32,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_INT64(arg1: GrB_Scalar, arg2: i64) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_INT64(
+        arg1: GrB_Scalar,
+        arg2: i64,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_UINT8(arg1: GrB_Scalar, arg2: u8) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_UINT8(
+        arg1: GrB_Scalar,
+        arg2: u8,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_UINT16(arg1: GrB_Scalar, arg2: u16) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_UINT16(
+        arg1: GrB_Scalar,
+        arg2: u16,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_UINT32(arg1: GrB_Scalar, arg2: u32) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_UINT32(
+        arg1: GrB_Scalar,
+        arg2: u32,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_UINT64(arg1: GrB_Scalar, arg2: u64) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_UINT64(
+        arg1: GrB_Scalar,
+        arg2: u64,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_FP32(arg1: GrB_Scalar, arg2: f32) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_FP32(
+        arg1: GrB_Scalar,
+        arg2: f32,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_setElement_FP64(arg1: GrB_Scalar, arg2: f64) -> GrB_Info;
+    pub fn GxB_Scalar_setElement_FP64(
+        arg1: GrB_Scalar,
+        arg2: f64,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Scalar_setElement_UDT(
@@ -14341,37 +14660,70 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_BOOL(arg1: *mut bool, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_BOOL(
+        arg1: *mut bool,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_INT8(arg1: *mut i8, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_INT8(
+        arg1: *mut i8,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_INT16(arg1: *mut i16, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_INT16(
+        arg1: *mut i16,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_INT32(arg1: *mut i32, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_INT32(
+        arg1: *mut i32,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_INT64(arg1: *mut i64, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_INT64(
+        arg1: *mut i64,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_UINT8(arg1: *mut u8, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_UINT8(
+        arg1: *mut u8,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_UINT16(arg1: *mut u16, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_UINT16(
+        arg1: *mut u16,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_UINT32(arg1: *mut u32, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_UINT32(
+        arg1: *mut u32,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_UINT64(arg1: *mut u64, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_UINT64(
+        arg1: *mut u64,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_FP32(arg1: *mut f32, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_FP32(
+        arg1: *mut f32,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_extractElement_FP64(arg1: *mut f64, arg2: GrB_Scalar) -> GrB_Info;
+    pub fn GxB_Scalar_extractElement_FP64(
+        arg1: *mut f64,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Scalar_extractElement_UDT(
@@ -14383,17 +14735,29 @@ extern "C" {
     pub fn GxB_Scalar_wait(arg1: *mut GrB_Scalar) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Scalar_error(arg1: *mut *const ::std::os::raw::c_char, arg2: GrB_Scalar)
-        -> GrB_Info;
+    pub fn GxB_Scalar_error(
+        arg1: *mut *const ::std::os::raw::c_char,
+        arg2: GrB_Scalar,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_type_name(arg1: *mut ::std::os::raw::c_char, arg2: GrB_Vector) -> GrB_Info;
+    pub fn GxB_Vector_type_name(
+        arg1: *mut ::std::os::raw::c_char,
+        arg2: GrB_Vector,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_type_name(arg1: *mut ::std::os::raw::c_char, arg2: GrB_Matrix) -> GrB_Info;
+    pub fn GxB_Matrix_type_name(
+        arg1: *mut ::std::os::raw::c_char,
+        arg2: GrB_Matrix,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_Option_set(arg1: GrB_Matrix, arg2: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Matrix_Option_set(
+        arg1: GrB_Matrix,
+        arg2: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Matrix_Option_set_INT32(
@@ -14410,7 +14774,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_Option_get(arg1: GrB_Matrix, arg2: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Matrix_Option_get(
+        arg1: GrB_Matrix,
+        arg2: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Matrix_Option_get_INT32(
@@ -14427,7 +14795,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_Option_set(arg1: GrB_Vector, arg2: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Vector_Option_set(
+        arg1: GrB_Vector,
+        arg2: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Vector_Option_set_INT32(
@@ -14444,7 +14816,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_Option_get(arg1: GrB_Vector, arg2: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Vector_Option_get(
+        arg1: GrB_Vector,
+        arg2: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Vector_Option_get_INT32(
@@ -14461,13 +14837,22 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Global_Option_set(arg1: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Global_Option_set(
+        arg1: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Global_Option_set_INT32(arg1: ::std::os::raw::c_int, arg2: i32) -> GrB_Info;
+    pub fn GxB_Global_Option_set_INT32(
+        arg1: ::std::os::raw::c_int,
+        arg2: i32,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Global_Option_set_FP64(arg1: ::std::os::raw::c_int, arg2: f64) -> GrB_Info;
+    pub fn GxB_Global_Option_set_FP64(
+        arg1: ::std::os::raw::c_int,
+        arg2: f64,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Global_Option_set_FP64_ARRAY(
@@ -14494,16 +14879,28 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Global_Option_get(arg1: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Global_Option_get(
+        arg1: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Global_Option_get_INT32(arg1: ::std::os::raw::c_int, arg2: *mut i32) -> GrB_Info;
+    pub fn GxB_Global_Option_get_INT32(
+        arg1: ::std::os::raw::c_int,
+        arg2: *mut i32,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Global_Option_get_FP64(arg1: ::std::os::raw::c_int, arg2: *mut f64) -> GrB_Info;
+    pub fn GxB_Global_Option_get_FP64(
+        arg1: ::std::os::raw::c_int,
+        arg2: *mut f64,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Global_Option_get_INT64(arg1: ::std::os::raw::c_int, arg2: *mut i64) -> GrB_Info;
+    pub fn GxB_Global_Option_get_INT64(
+        arg1: ::std::os::raw::c_int,
+        arg2: *mut i64,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Global_Option_get_CHAR(
@@ -14532,7 +14929,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Context_set(arg1: GxB_Context, arg2: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Context_set(
+        arg1: GxB_Context,
+        arg2: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Context_get_INT32(
@@ -14549,7 +14950,11 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Context_get(arg1: GxB_Context, arg2: ::std::os::raw::c_int, ...) -> GrB_Info;
+    pub fn GxB_Context_get(
+        arg1: GxB_Context,
+        arg2: ::std::os::raw::c_int,
+        ...
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Vector_apply_BinaryOp1st(
@@ -14607,10 +15012,17 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Matrix_resize(arg1: GrB_Matrix, arg2: u64, arg3: u64) -> GrB_Info;
+    pub fn GxB_Matrix_resize(
+        arg1: GrB_Matrix,
+        arg2: u64,
+        arg3: u64,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_Vector_resize(arg1: GrB_Vector, arg2: u64) -> GrB_Info;
+    pub fn GxB_Vector_resize(
+        arg1: GrB_Vector,
+        arg2: u64,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_Matrix_import_CSR(
@@ -14949,10 +15361,16 @@ extern "C" {
     ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_SelectOp_xtype(arg1: *mut GrB_Type, arg2: GxB_SelectOp) -> GrB_Info;
+    pub fn GxB_SelectOp_xtype(
+        arg1: *mut GrB_Type,
+        arg2: GxB_SelectOp,
+    ) -> GrB_Info;
 }
 extern "C" {
-    pub fn GxB_SelectOp_ttype(arg1: *mut GrB_Type, arg2: GxB_SelectOp) -> GrB_Info;
+    pub fn GxB_SelectOp_ttype(
+        arg1: *mut GrB_Type,
+        arg2: GxB_SelectOp,
+    ) -> GrB_Info;
 }
 extern "C" {
     pub fn GxB_SelectOp_fprint(

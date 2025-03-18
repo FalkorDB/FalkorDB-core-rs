@@ -6,7 +6,10 @@
 use std::{mem::MaybeUninit, ptr::null_mut};
 
 use crate::graph::matrix::GraphBLAS::{
-    GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Matrix_apply, GrB_Matrix_assign_Scalar, GrB_Matrix_clear, GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free, GrB_Matrix_get_INT32, GrB_Matrix_removeElement, GrB_Matrix_setElement_BOOL, GrB_Matrix_setElement_UINT64, GrB_WaitMode, GrB_mxm, GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field
+    GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Matrix_apply, GrB_Matrix_assign_Scalar, GrB_Matrix_clear,
+    GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free, GrB_Matrix_get_INT32, GrB_Matrix_removeElement,
+    GrB_Matrix_setElement_BOOL, GrB_Matrix_setElement_UINT64, GrB_WaitMode, GrB_mxm,
+    GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field,
 };
 
 use super::GraphBLAS::{
@@ -228,7 +231,11 @@ impl SparseMatrix {
     pub fn pending(&self) -> bool {
         unsafe {
             let mut pending: MaybeUninit<i32> = MaybeUninit::uninit();
-            grb_check!(GrB_Matrix_get_INT32(self.0, pending.as_mut_ptr(), GxB_Option_Field::GxB_WILL_WAIT as _));
+            grb_check!(GrB_Matrix_get_INT32(
+                self.0,
+                pending.as_mut_ptr(),
+                GxB_Option_Field::GxB_WILL_WAIT as _
+            ));
             pending.assume_init() == 1
         }
     }
