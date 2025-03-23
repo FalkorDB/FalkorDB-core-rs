@@ -24,12 +24,15 @@ fn main() {
     }
 
     println!("cargo:rustc-link-search=/opt/homebrew/Cellar/rocksdb/9.11.1/lib");
-    println!("cargo:rustc-link-search=/home/linuxbrew/.linuxbrew/Cellar/rocksdb/9.11.1/lib");
+    println!("cargo:rustc-link-search=/home/avi/repos/rocksdb");
+    println!("cargo:rustc-link-search=/rocksdb");
     println!("cargo:rustc-link-lib=static=rocksdb");
     println!("cargo:rustc-link-search=/opt/homebrew/Cellar/snappy/1.2.1/lib");
     println!("cargo:rustc-link-search=/home/linuxbrew/.linuxbrew/Cellar/snappy/1.2.1/lib");
+    println!("cargo:rustc-link-search=/home/avi/repos/snappy/build");
+    println!("cargo:rustc-link-search=/snappy/build");
     println!("cargo:rustc-link-lib=static=snappy");
-    println!("cargo:rustc-link-search=/opt/homebrew/Cellar/lz4/1.10.0/lib");
-    println!("cargo:rustc-link-search=/home/linuxbrew/.linuxbrew/Cellar/lz4/1.10.0/lib");
-    println!("cargo:rustc-link-lib=static=lz4");
+    // println!("cargo:rustc-link-search=/opt/homebrew/Cellar/lz4/1.10.0/lib");
+    // println!("cargo:rustc-link-search=/home/linuxbrew/.linuxbrew/Cellar/lz4/1.10.0/lib");
+    // println!("cargo:rustc-link-lib=static=lz4");
 }
