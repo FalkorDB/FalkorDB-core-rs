@@ -32,9 +32,9 @@ fn main() {
     println!("cargo:rustc-link-search=/home/avi/repos/snappy/build");
     println!("cargo:rustc-link-search=/snappy/build");
     println!("cargo:rustc-link-lib=static=snappy");
-    // println!("cargo:rustc-link-search=/opt/homebrew/Cellar/zlib/1.3.1/lib");
-    // println!("cargo:rustc-link-search=/zlib");
-    // println!("cargo:rustc-link-lib=static=z");
+    println!("cargo:rustc-link-search=/opt/homebrew/Cellar/zlib/1.3.1/lib");
+    println!("cargo:rustc-link-search=/zlib");
+    println!("cargo:rustc-link-lib=static=z");
     println!("cargo:rustc-link-search=/opt/homebrew/Cellar/lz4/1.10.0/lib");
     println!("cargo:rustc-link-search=/lz4/lib");
     println!("cargo:rustc-link-lib=static=lz4");
