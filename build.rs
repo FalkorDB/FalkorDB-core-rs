@@ -35,6 +35,6 @@ fn main() {
     // println!("cargo:rustc-link-search=/zlib");
     // println!("cargo:rustc-link-lib=static=z");
     println!("cargo:rustc-link-search=/opt/homebrew/Cellar/lz4/1.10.0/lib");
-    println!("cargo:rustc-link-search=/lz4");
+    println!("cargo:rustc-link-search=/lz4/lib");
     println!("cargo:rustc-link-lib=static=lz4");
 }
