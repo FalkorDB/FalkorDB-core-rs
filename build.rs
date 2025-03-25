@@ -23,6 +23,7 @@ fn main() {
         }
     }
 
+    println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-search=/opt/homebrew/Cellar/rocksdb/9.11.1/lib");
     println!("cargo:rustc-link-search=/home/avi/repos/rocksdb");
     println!("cargo:rustc-link-search=/rocksdb");
