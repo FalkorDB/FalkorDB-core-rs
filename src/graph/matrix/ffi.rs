@@ -217,6 +217,15 @@ unsafe extern "C" fn Delta_Matrix_pending(
 }
 
 #[no_mangle]
+unsafe extern "C" fn Delta_Matrix_memoryUsage(
+    size: *mut usize,
+    c: _Matrix,
+) -> GrB_Info {
+    *size = (&*c).memory_usage();
+    GrB_Info::GrB_SUCCESS
+}
+
+#[no_mangle]
 unsafe extern "C" fn Delta_Matrix_wait(
     c: _Matrix,
     force_sync: bool,
@@ -300,7 +309,8 @@ unsafe extern "C" fn Delta_MatrixTupleIter_next_BOOL(
     col: *mut GrB_Index,
     val: *mut bool,
 ) -> GrB_Info {
-    match (*iter).next_bool() {
+    let mut it = iter.read_unaligned();
+    let res = match it.next_bool() {
         Ok(Some((r, c))) => {
             if !row.is_null() {
                 *row = r;
@@ -315,7 +325,9 @@ unsafe extern "C" fn Delta_MatrixTupleIter_next_BOOL(
         }
         Ok(None) => GrB_Info::GxB_EXHAUSTED,
         _ => GrB_Info::GrB_NULL_POINTER,
-    }
+    };
+    iter.write_unaligned(it);
+    res
 }
 
 #[no_mangle]
