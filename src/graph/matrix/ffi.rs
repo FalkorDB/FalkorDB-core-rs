@@ -244,16 +244,12 @@ unsafe extern "C" fn Delta_Matrix_synchronize(
 }
 
 #[no_mangle]
-unsafe extern "C" fn Delta_Matrix_lock(
-    c: _Matrix
-) {
+unsafe extern "C" fn Delta_Matrix_lock(c: _Matrix) {
     (*c).lock();
 }
 
 #[no_mangle]
-unsafe extern "C" fn Delta_Matrix_unlock(
-    c: _Matrix
-) {
+unsafe extern "C" fn Delta_Matrix_unlock(c: _Matrix) {
     (*c).unlock();
 }
 
