@@ -244,6 +244,16 @@ unsafe extern "C" fn Delta_Matrix_synchronize(
 }
 
 #[no_mangle]
+unsafe extern "C" fn Delta_Matrix_lock(c: _Matrix) {
+    (*c).lock();
+}
+
+#[no_mangle]
+unsafe extern "C" fn Delta_Matrix_unlock(c: _Matrix) {
+    (*c).unlock();
+}
+
+#[no_mangle]
 unsafe extern "C" fn Delta_Matrix_free(c: *mut _Matrix) {
     drop(Box::from_raw(c.read_unaligned()));
     c.write_unaligned(null_mut());
