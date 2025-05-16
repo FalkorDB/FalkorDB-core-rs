@@ -547,6 +547,21 @@ impl DeltaMatrix {
 
         self.mutex.as_mut().unwrap().unlock();
     }
+
+    pub fn memory_usage(&self) -> usize {
+        self.matrix.memory_usage()
+            + self.delta_plus.memory_usage()
+            + self.delta_minus.memory_usage()
+            + self.transposed.as_ref().map_or(0, |t| t.memory_usage())
+    }
+
+    pub fn lock(&mut self) {
+        self.mutex.as_mut().unwrap().lock();
+    }
+
+    pub fn unlock(&mut self) {
+        self.mutex.as_mut().unwrap().unlock();
+    }
 }
 
 #[cfg(test)]
