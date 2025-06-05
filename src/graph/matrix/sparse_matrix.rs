@@ -9,11 +9,11 @@ use crate::graph::matrix::GraphBLAS::{
     GrB_DESC_R, GrB_IDENTITY_BOOL, GrB_Matrix_apply, GrB_Matrix_assign_Scalar, GrB_Matrix_clear,
     GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free, GrB_Matrix_get_INT32, GrB_Matrix_removeElement,
     GrB_Matrix_setElement_BOOL, GrB_Matrix_setElement_UINT64, GrB_WaitMode, GrB_mxm,
-    GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field,
+    GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field, GrB_mxv
 };
 
 use super::GraphBLAS::{
-    GrB_BinaryOp, GrB_Descriptor, GrB_Index, GrB_Info, GrB_Matrix, GrB_Matrix_assign,
+    GrB_BinaryOp, GrB_Descriptor, GrB_Index, GrB_Info, GrB_Matrix, GrB_Vector, GrB_Matrix_assign,
     GrB_Matrix_extractElement_BOOL, GrB_Matrix_extractElement_UINT64, GrB_Matrix_ncols,
     GrB_Matrix_new, GrB_Matrix_nrows, GrB_Matrix_nvals, GrB_Matrix_resize, GrB_Matrix_wait,
     GrB_Scalar, GrB_Semiring, GrB_Type, GrB_transpose, GxB_Matrix_memoryUsage,
@@ -313,6 +313,28 @@ impl SparseMatrix {
                 m.0,
                 n.0,
                 desc,
+            ));
+        }
+    }
+
+    pub fn mxv(
+        &self,
+        c: GrB_Vector,
+        mask: Option<GrB_Vector>,
+        accum: Option<GrB_BinaryOp>,
+        v: GrB_Vector,
+        semiring: GrB_Semiring,
+        desc: Option<GrB_Descriptor>,
+    ) {
+        unsafe {
+            grb_check!(GrB_mxv(
+                c,
+                mask.map_or(null_mut(), |m| m),
+                accum.map_or(null_mut(), |a| a),
+                semiring,
+                self.0,
+                v,
+                desc.map_or(null_mut(), |d| d)
             ));
         }
     }

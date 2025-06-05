@@ -50,6 +50,7 @@ pub const GxB_COMPRESSION_DEFAULT: u32 = 0;
 pub const GxB_COMPRESSION_LZ4: u32 = 1000;
 pub const GxB_COMPRESSION_LZ4HC: u32 = 2000;
 pub const GxB_COMPRESSION_ZSTD: u32 = 3000;
+pub const GxB_SEMIRING_MONOID: i32 = 7046;
 pub type __int64_t = ::std::os::raw::c_longlong;
 pub type __darwin_off_t = __int64_t;
 pub type fpos_t = __darwin_off_t;

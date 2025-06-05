@@ -8,7 +8,7 @@ use std::ptr::null_mut;
 use super::{
     delta_matrix::DeltaMatrix,
     delta_matrix_iter::DeltaMatrixIter,
-    GraphBLAS::{GrB_Index, GrB_Info, GrB_Matrix, GrB_Semiring, GrB_Type},
+    GraphBLAS::{GrB_Index, GrB_Info, GrB_Matrix, GrB_Vector, GrB_Semiring, GrB_Type},
 };
 
 type _Matrix = *mut DeltaMatrix;
@@ -169,6 +169,16 @@ unsafe extern "C" fn Delta_mxm(
     b: _Matrix,
 ) -> GrB_Info {
     (*c).mxm(semiring, &*a, &*b);
+    GrB_Info::GrB_SUCCESS
+}
+#[no_mangle]
+unsafe extern "C" fn Delta_degree(
+    degree: *mut GrB_Vector,
+    m: _Matrix,
+    mask: GrB_Vector,
+    v: GrB_Vector
+) -> GrB_Info {
+    (*degree) = (*m).degree(if(mask.is_null()) {None} else {Some(mask)}, v, None);
     GrB_Info::GrB_SUCCESS
 }
 

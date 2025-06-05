@@ -7,7 +7,7 @@ use std::{mem::MaybeUninit, ptr::null_mut};
 
 use libc::pthread_mutex_t;
 
-use crate::binding::graph::{ConfigOptionField, Config_Option_get};
+use crate::{binding::graph::{ConfigOptionField, Config_Option_get}, graph::matrix::GraphBLAS::{GrB_Descriptor, GrB_PLUS_UINT64, GrB_Vector}};
 
 use super::{
     sparse_matrix::SparseMatrix,
@@ -15,6 +15,8 @@ use super::{
         GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_Matrix,
         GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type, GxB_ANY_PAIR_BOOL,
         GxB_HYPERSPARSE, GxB_SPARSE,
+        GrB_Semiring_get_VOID, GxB_SEMIRING_MONOID, GrB_Vector_new, GrB_UINT64,
+        GxB_PLUS_PAIR_UINT64, GrB_MINUS_UINT64
     },
 };
 
@@ -230,7 +232,7 @@ impl DeltaMatrix {
         j: u64,
     ) {
         if let Some(t) = self.transposed.as_mut() {
-            t.set_element_bool(j, i);
+            t.set_element_u64(x,j, i);
         }
 
         // if the value marked as deleted in dm remove it
@@ -386,6 +388,42 @@ impl DeltaMatrix {
             }
         }
     }
+
+    pub fn degree(
+        &mut self,
+        mask: Option<GrB_Vector>,
+        v: GrB_Vector,
+        desc: Option<GrB_Descriptor>
+    ) -> GrB_Vector
+    {
+        let mut c = MaybeUninit::<GrB_Vector>::uninit();
+        let mut _c;
+        unsafe{
+            GrB_Vector_new(c.as_mut_ptr(), GrB_UINT64, self.ncols());
+            _c = c.assume_init();
+        }
+        self.matrix.mxv(_c, mask, None, v, unsafe{GxB_PLUS_PAIR_UINT64}, desc);
+        self.delta_plus.mxv(
+            _c, mask, unsafe{Some(GrB_PLUS_UINT64)}, v, unsafe{GxB_PLUS_PAIR_UINT64}, desc);
+        self.delta_plus.mxv(
+            _c, mask, unsafe{Some(GrB_MINUS_UINT64)}, v, unsafe{GxB_PLUS_PAIR_UINT64}, desc);
+        _c  
+    }
+    // /// Multiply m by n and the result is in this [`DeltaMatrix`].
+    // pub fn mxv(
+    //     &mut self,
+    //     mask: Option<GrB_Vector>,
+    //     semiring: GrB_Semiring,
+    //     v: GrB_Vector,
+    //     desc: GrB_Descriptor
+    // ) {
+    //     let mut mon = MaybeUninit::uninit().as_mut_ptr();
+    //     unsafe{
+    //         GrB_Semiring_get_VOID(semiring, mon, GxB_SEMIRING_MONOID);
+    //     }
+
+    // }
+
 
     /// Elementwise add m and n the result is in this [`DeltaMatrix`].
     pub fn element_wise_add(
