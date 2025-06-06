@@ -38,6 +38,14 @@ unsafe extern "C" fn Delta_Matrix_getTranspose(c: _Matrix) -> _Matrix {
 unsafe extern "C" fn Delta_Matrix_M(c: _Matrix) -> GrB_Matrix {
     (&*c).m().grb_matrix_ref()
 }
+#[no_mangle]
+unsafe extern "C" fn Delta_Matrix_Dp(c: _Matrix) -> GrB_Matrix {
+    (&*c).dp().grb_matrix_ref()
+}
+#[no_mangle]
+unsafe extern "C" fn Delta_Matrix_Dm(c: _Matrix) -> GrB_Matrix {
+    (&*c).dm().grb_matrix_ref()
+}
 
 #[no_mangle]
 unsafe extern "C" fn Delta_Matrix_setM(
