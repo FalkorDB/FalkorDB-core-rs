@@ -115,7 +115,7 @@ impl SparseMatrix {
             nvals.assume_init()
         }
     }
-    
+
     pub fn resize(
         &mut self,
         nrows_new: u64,
@@ -138,16 +138,16 @@ impl SparseMatrix {
     ) {
         unsafe {
             if matrix.nvals() > 0 {
-                grb_check!(GrB_Matrix_assign_BOOL(
+                grb_check!(GrB_Matrix_assign(
                     self.0,
-                    matrix.0,
                     null_mut(),
-                    true,
+                    null_mut(),
+                    matrix.0,
                     GrB_ALL,
                     self.nrows(),
                     GrB_ALL,
                     self.ncols(),
-                    GrB_DESC_S
+                    null_mut()
                 ));
             } else {
                 self.clear();
