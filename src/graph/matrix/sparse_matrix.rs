@@ -6,19 +6,18 @@
 use std::{mem::MaybeUninit, ptr::null_mut};
 
 use crate::graph::matrix::GraphBLAS::{
-    GrB_ALL, GrB_DESC_S, GrB_DESC_CT0, GrB_DESC_T0, GrB_DESC_R, GrB_IDENTITY_BOOL, 
-    GrB_Matrix_apply, GrB_Matrix_assign_Scalar, GrB_Matrix_clear, 
-    GrB_Matrix_eWiseAdd_Semiring, GrB_Matrix_free, GrB_Matrix_get_INT32, 
-    GrB_Matrix_removeElement, GrB_Matrix_setElement_BOOL, GrB_Matrix_setElement_UINT64, 
-    GrB_WaitMode, GrB_mxm, GxB_ALWAYS_HYPER, GxB_Matrix_Option_set, GxB_Option_Field
+    GrB_ALL, GrB_DESC_CT0, GrB_DESC_R, GrB_DESC_S, GrB_DESC_T0, GrB_IDENTITY_BOOL,
+    GrB_Matrix_apply, GrB_Matrix_assign_Scalar, GrB_Matrix_clear, GrB_Matrix_eWiseAdd_Semiring,
+    GrB_Matrix_free, GrB_Matrix_get_INT32, GrB_Matrix_removeElement, GrB_Matrix_setElement_BOOL,
+    GrB_Matrix_setElement_UINT64, GrB_WaitMode, GrB_mxm, GxB_ALWAYS_HYPER, GxB_Matrix_Option_set,
+    GxB_Option_Field,
 };
 
 use super::GraphBLAS::{
     GrB_BinaryOp, GrB_Descriptor, GrB_Index, GrB_Info, GrB_Matrix, GrB_Matrix_assign,
-    GrB_Matrix_extractElement_BOOL, GrB_Matrix_extractElement_UINT64, GrB_Matrix_ncols,
-    GrB_Matrix_new, GrB_Matrix_nrows, GrB_Matrix_nvals, GrB_Matrix_resize, GrB_Matrix_wait,
-    GrB_Matrix_assign_BOOL, 
-    GrB_Scalar, GrB_Semiring, GrB_Type, GrB_transpose, GxB_Matrix_memoryUsage,
+    GrB_Matrix_assign_BOOL, GrB_Matrix_extractElement_BOOL, GrB_Matrix_extractElement_UINT64,
+    GrB_Matrix_ncols, GrB_Matrix_new, GrB_Matrix_nrows, GrB_Matrix_nvals, GrB_Matrix_resize,
+    GrB_Matrix_wait, GrB_Scalar, GrB_Semiring, GrB_Type, GrB_transpose, GxB_Matrix_memoryUsage,
 };
 
 #[macro_export]
