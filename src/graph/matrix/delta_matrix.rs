@@ -7,13 +7,16 @@ use std::{mem::MaybeUninit, ptr::null_mut};
 
 use libc::pthread_mutex_t;
 
-use crate::binding::graph::{ConfigOptionField, Config_Option_get};
+use crate::{
+    binding::graph::{ConfigOptionField, Config_Option_get},
+    graph::matrix::GraphBLAS::GxB_ANY_PAIR_UINT64,
+};
 
 use super::{
     sparse_matrix::SparseMatrix,
     GraphBLAS::{
         GrB_ALL, GrB_BOOL, GrB_DESC_RSC, GrB_DESC_RSCT0, GrB_DESC_RT0, GrB_DESC_S, GrB_Matrix,
-        GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type, GxB_ANY_PAIR_BOOL,
+        GrB_Scalar_free, GrB_Scalar_new, GrB_Semiring, GrB_Type, GrB_UINT64, GxB_ANY_PAIR_BOOL,
         GxB_HYPERSPARSE, GxB_SPARSE,
     },
 };
@@ -399,16 +402,28 @@ impl DeltaMatrix {
             n.delta_minus.nvals() > 0 || n.delta_plus.nvals() > 0,
         ) {
             (true, true) => {
-                self.matrix
-                    .element_wise_add(None, Some(&m.export()), Some(&n.export()), semiring);
+                self.matrix.element_wise_add(
+                    None,
+                    Some(&m.export(unsafe { GrB_BOOL })),
+                    Some(&n.export(unsafe { GrB_BOOL })),
+                    semiring,
+                );
             }
             (true, false) => {
-                self.matrix
-                    .element_wise_add(None, Some(&m.export()), Some(&n.matrix), semiring);
+                self.matrix.element_wise_add(
+                    None,
+                    Some(&m.export(unsafe { GrB_BOOL })),
+                    Some(&n.matrix),
+                    semiring,
+                );
             }
             (false, true) => {
-                self.matrix
-                    .element_wise_add(None, Some(&m.matrix), Some(&n.export()), semiring);
+                self.matrix.element_wise_add(
+                    None,
+                    Some(&m.matrix),
+                    Some(&n.export(unsafe { GrB_BOOL })),
+                    semiring,
+                );
             }
             (false, false) => {
                 self.matrix
@@ -418,8 +433,12 @@ impl DeltaMatrix {
     }
 
     /// Returns [`SparseMatrix`] by computing m-dm+dp of this [`DeltaMatrix`].
-    pub fn export(&self) -> SparseMatrix {
-        let mut m = SparseMatrix::new(unsafe { GrB_BOOL }, self.nrows(), self.ncols());
+    pub fn export(
+        &self,
+        ty: GrB_Type,
+    ) -> SparseMatrix {
+        debug_assert!(ty == unsafe { GrB_BOOL } || ty == unsafe { GrB_UINT64 });
+        let mut m = SparseMatrix::new(ty, self.nrows(), self.ncols());
         if self.delta_minus.nvals() > 0 {
             m.transpose(
                 Some(&self.delta_minus),
@@ -433,11 +452,16 @@ impl DeltaMatrix {
             });
         }
         if self.delta_plus.nvals() > 0 {
-            m.element_wise_add(None, None, Some(&self.delta_plus), unsafe {
-                GxB_ANY_PAIR_BOOL
-            });
+            m.assign(
+                &self.delta_plus,
+                &self.delta_plus,
+                unsafe { GrB_ALL },
+                0,
+                unsafe { GrB_ALL },
+                0,
+                unsafe { GrB_DESC_S },
+            );
         }
-
         m
     }
 
@@ -849,12 +873,12 @@ mod tests {
 
         let mut a = DeltaMatrix::new(unsafe { GrB_BOOL }, nrows, ncols, false);
 
-        let n = a.export();
+        let n = a.export(unsafe { GrB_BOOL });
         matrix_eq(&a.matrix, &n);
 
         a.set_element_bool(i, j);
         a.wait(true);
-        let n = a.export();
+        let n = a.export(unsafe { GrB_BOOL });
         matrix_eq(&a.matrix, &n);
     }
 
@@ -871,7 +895,7 @@ mod tests {
         a.wait(true);
         a.remove_element(0, 0);
         a.set_element_bool(2, 2);
-        let n = a.export();
+        let n = a.export(unsafe { GrB_BOOL });
         a.wait(true);
 
         matrix_eq(&a.matrix, &n);

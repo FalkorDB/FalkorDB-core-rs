@@ -202,8 +202,9 @@ unsafe extern "C" fn Delta_Matrix_copy(
 unsafe extern "C" fn Delta_Matrix_export(
     a: *mut GrB_Matrix,
     c: _Matrix,
+    ty: GrB_Type,
 ) -> GrB_Info {
-    *a = (&*c).export().grb_matrix();
+    *a = (&*c).export(ty).grb_matrix();
     GrB_Info::GrB_SUCCESS
 }
 
