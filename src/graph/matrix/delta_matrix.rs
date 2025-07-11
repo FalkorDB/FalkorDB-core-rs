@@ -452,13 +452,15 @@ impl DeltaMatrix {
             });
         }
         if self.delta_plus.nvals() > 0 {
-            m.element_wise_add(None, None, Some(&self.delta_plus), unsafe {
-                if ty == GrB_BOOL {
-                    GxB_ANY_PAIR_BOOL
-                } else {
-                    GxB_ANY_PAIR_UINT64
-                }
-            });
+            m.assign(
+                &self.delta_plus,
+                &self.delta_plus,
+                unsafe { GrB_ALL },
+                0,
+                unsafe { GrB_ALL },
+                0,
+                unsafe { GrB_DESC_S },
+            );
         }
         m
     }
