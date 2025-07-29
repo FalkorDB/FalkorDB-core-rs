@@ -146,6 +146,22 @@ impl DeltaMatrix {
         self.matrix = SparseMatrix::from(m);
     }
 
+    /// Set DeltaMatrix dp matrix [`DeltaMatrix`].
+    pub fn set_dp(
+        &mut self,
+        dp: GrB_Matrix,
+    ) {
+        self.delta_plus = SparseMatrix::from(dp);
+    }
+
+    /// Set DeltaMatrix dm matrix [`DeltaMatrix`].
+    pub fn set_dm(
+        &mut self,
+        dm: GrB_Matrix,
+    ) {
+        self.delta_minus = SparseMatrix::from(dm);
+    }
+
     /// Returns a reference to the delta plus of this [`DeltaMatrix`].
     pub fn dp(&self) -> &SparseMatrix {
         &self.delta_plus
